@@ -1,0 +1,38 @@
+{
+  "name": "mindjourney",
+  "version": "1.0.0",
+  "description": "Интерактивный психологический сайт с тестами личности",
+  "main": "index.js",
+  "scripts": {
+    "start": "python start_project.py",
+    "backend": "cd backend && python manage.py runserver",
+    "frontend": "cd frontend && npm start",
+    "install:backend": "cd backend && pip install -r requirements.txt",
+    "install:frontend": "cd frontend && npm install",
+    "setup": "python start_project.py",
+    "build": "cd frontend && npm run build",
+    "test": "cd frontend && npm test",
+    "migrate": "cd backend && python manage.py migrate",
+    "makemigrations": "cd backend && python manage.py makemigrations",
+    "createsuperuser": "cd backend && python manage.py createsuperuser",
+    "loaddata": "cd backend && python manage.py loaddata api/fixtures/demo_data.json"
+  },
+  "keywords": [
+    "psychology",
+    "personality-test",
+    "django",
+    "react",
+    "d3.js",
+    "mindjourney"
+  ],
+  "author": "MindJourney Team",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/mindjourney.git"
+  },
+  "bugs": {
+    "url": "https://github.com/yourusername/mindjourney/issues"
+  },
+  "homepage": "https://github.com/yourusername/mindjourney#readme"
+}

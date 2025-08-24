@@ -1,0 +1,324 @@
+[
+    {
+        "model": "api.test",
+        "pk": 1,
+        "fields": {
+            "name": "Тест личности MindJourney",
+            "description": "Комплексный тест для определения основных черт вашей личности. Поможет понять ваши сильные стороны и области для развития.",
+            "created_at": "2024-01-01T00:00:00Z",
+            "is_active": true
+        }
+    },
+    {
+        "model": "api.question",
+        "pk": 1,
+        "fields": {
+            "test": 1,
+            "text": "Как вы обычно проводите свободное время?",
+            "order": 1
+        }
+    },
+    {
+        "model": "api.question",
+        "pk": 2,
+        "fields": {
+            "test": 1,
+            "text": "В новой ситуации вы предпочитаете:",
+            "order": 2
+        }
+    },
+    {
+        "model": "api.question",
+        "pk": 3,
+        "fields": {
+            "test": 1,
+            "text": "При решении проблем вы обычно:",
+            "order": 3
+        }
+    },
+    {
+        "model": "api.question",
+        "pk": 4,
+        "fields": {
+            "test": 1,
+            "text": "В команде вы чаще всего:",
+            "order": 4
+        }
+    },
+    {
+        "model": "api.question",
+        "pk": 5,
+        "fields": {
+            "test": 1,
+            "text": "Как вы относитесь к изменениям в планах?",
+            "order": 5
+        }
+    },
+    {
+        "model": "api.question",
+        "pk": 6,
+        "fields": {
+            "test": 1,
+            "text": "При общении с людьми вы:",
+            "order": 6
+        }
+    },
+    {
+        "model": "api.question",
+        "pk": 7,
+        "fields": {
+            "test": 1,
+            "text": "Как вы принимаете важные решения?",
+            "order": 7
+        }
+    },
+    {
+        "model": "api.question",
+        "pk": 8,
+        "fields": {
+            "test": 1,
+            "text": "В стрессовой ситуации вы:",
+            "order": 8
+        }
+    },
+    {
+        "model": "api.answer",
+        "pk": 1,
+        "fields": {
+            "question": 1,
+            "text": "Встречаюсь с друзьями, хожу на мероприятия",
+            "value": 4,
+            "personality_trait": "Экстраверсия"
+        }
+    },
+    {
+        "model": "api.answer",
+        "pk": 2,
+        "fields": {
+            "question": 1,
+            "text": "Читаю книги, смотрю фильмы дома",
+            "value": 2,
+            "personality_trait": "Интроверсия"
+        }
+    },
+    {
+        "model": "api.answer",
+        "pk": 3,
+        "fields": {
+            "question": 1,
+            "text": "Занимаюсь творчеством, пробую новое",
+            "value": 5,
+            "personality_trait": "Креативность"
+        }
+    },
+    {
+        "model": "api.answer",
+        "pk": 4,
+        "fields": {
+            "question": 2,
+            "text": "Наблюдать и анализировать",
+            "value": 3,
+            "personality_trait": "Адаптивность"
+        }
+    },
+    {
+        "model": "api.answer",
+        "pk": 5,
+        "fields": {
+            "question": 2,
+            "text": "Действовать сразу",
+            "value": 4,
+            "personality_trait": "Лидерство"
+        }
+    },
+    {
+        "model": "api.answer",
+        "pk": 6,
+        "fields": {
+            "question": 2,
+            "text": "Изучать детали и планировать",
+            "value": 5,
+            "personality_trait": "Добросовестность"
+        }
+    },
+    {
+        "model": "api.answer",
+        "pk": 7,
+        "fields": {
+            "question": 3,
+            "text": "Использую логику и факты",
+            "value": 4,
+            "personality_trait": "Добросовестность"
+        }
+    },
+    {
+        "model": "api.answer",
+        "pk": 8,
+        "fields": {
+            "question": 3,
+            "text": "Прислушиваюсь к интуиции",
+            "value": 3,
+            "personality_trait": "Креативность"
+        }
+    },
+    {
+        "model": "api.answer",
+        "pk": 9,
+        "fields": {
+            "question": 3,
+            "text": "Консультируюсь с другими",
+            "value": 5,
+            "personality_trait": "Эмпатия"
+        }
+    },
+    {
+        "model": "api.answer",
+        "pk": 10,
+        "fields": {
+            "question": 4,
+            "text": "Беру на себя руководство",
+            "value": 5,
+            "personality_trait": "Лидерство"
+        }
+    },
+    {
+        "model": "api.answer",
+        "pk": 11,
+        "fields": {
+            "question": 4,
+            "text": "Поддерживаю и помогаю другим",
+            "value": 4,
+            "personality_trait": "Доброжелательность"
+        }
+    },
+    {
+        "model": "api.answer",
+        "pk": 12,
+        "fields": {
+            "question": 4,
+            "text": "Выполняю свою часть работы",
+            "value": 3,
+            "personality_trait": "Добросовестность"
+        }
+    },
+    {
+        "model": "api.answer",
+        "pk": 13,
+        "fields": {
+            "question": 5,
+            "text": "Легко адаптируюсь",
+            "value": 5,
+            "personality_trait": "Адаптивность"
+        }
+    },
+    {
+        "model": "api.answer",
+        "pk": 14,
+        "fields": {
+            "question": 5,
+            "text": "Немного расстраиваюсь, но принимаю",
+            "value": 3,
+            "personality_trait": "Нейротизм"
+        }
+    },
+    {
+        "model": "api.answer",
+        "pk": 15,
+        "fields": {
+            "question": 5,
+            "text": "Предпочитаю стабильность",
+            "value": 2,
+            "personality_trait": "Добросовестность"
+        }
+    },
+    {
+        "model": "api.answer",
+        "pk": 16,
+        "fields": {
+            "question": 6,
+            "text": "Слушаю и понимаю чувства других",
+            "value": 5,
+            "personality_trait": "Эмпатия"
+        }
+    },
+    {
+        "model": "api.answer",
+        "pk": 17,
+        "fields": {
+            "question": 6,
+            "text": "Делюсь своими мыслями",
+            "value": 4,
+            "personality_trait": "Экстраверсия"
+        }
+    },
+    {
+        "model": "api.answer",
+        "pk": 18,
+        "fields": {
+            "question": 6,
+            "text": "Остаюсь нейтральным",
+            "value": 2,
+            "personality_trait": "Нейротизм"
+        }
+    },
+    {
+        "model": "api.answer",
+        "pk": 19,
+        "fields": {
+            "question": 7,
+            "text": "Анализирую все варианты",
+            "value": 5,
+            "personality_trait": "Добросовестность"
+        }
+    },
+    {
+        "model": "api.answer",
+        "pk": 20,
+        "fields": {
+            "question": 7,
+            "text": "Доверяю первому впечатлению",
+            "value": 3,
+            "personality_trait": "Креативность"
+        }
+    },
+    {
+        "model": "api.answer",
+        "pk": 21,
+        "fields": {
+            "question": 7,
+            "text": "Советуюсь с близкими",
+            "value": 4,
+            "personality_trait": "Эмпатия"
+        }
+    },
+    {
+        "model": "api.answer",
+        "pk": 22,
+        "fields": {
+            "question": 8,
+            "text": "Остаюсь спокойным",
+            "value": 5,
+            "personality_trait": "Нейротизм"
+        }
+    },
+    {
+        "model": "api.answer",
+        "pk": 23,
+        "fields": {
+            "question": 8,
+            "text": "Ищу поддержку у других",
+            "value": 3,
+            "personality_trait": "Эмпатия"
+        }
+    },
+    {
+        "model": "api.answer",
+        "pk": 24,
+        "fields": {
+            "question": 8,
+            "text": "Активно решаю проблему",
+            "value": 4,
+            "personality_trait": "Лидерство"
+        }
+    }
+]
