@@ -261,36 +261,9 @@ def get_trait_description(trait, score):
         'Эмпатия': 'Способность понимать чувства и эмоции других людей',
         'Адаптивность': 'Гибкость в изменяющихся условиях'
     }
-    return descriptions.get(trait, f'Черта личности: {trait}')
+    return descriptions.get(trait, trait)
 
 
 def get_trait_recommendations(trait, score, stability):
-    """Возвращает рекомендации по развитию черты личности"""
-    base_recommendations = {
-        'high': f"У вас отлично развита черта '{trait}'. Продолжайте развивать её и используйте для достижения целей.",
-        'medium': f"Черта '{trait}' развита хорошо. Работайте над её укреплением для лучших результатов.",
-        'low': f"Черта '{trait}' развита на среднем уровне. Регулярная практика поможет улучшить её.",
-        'very_low': f"Черта '{trait}' требует развития. Начните с небольших шагов и постепенно увеличивайте нагрузку.",
-        'critical': f"Черта '{trait}' нуждается в активном развитии. Рассмотрите возможность работы с коучем или психологом."
-    }
-    
-    if score >= 80:
-        level = 'high'
-    elif score >= 60:
-        level = 'medium'
-    elif score >= 40:
-        level = 'low'
-    elif score >= 20:
-        level = 'very_low'
-    else:
-        level = 'critical'
-    
-    recommendation = base_recommendations[level]
-    
-    # Добавляем рекомендации по стабильности
-    if stability == 'low':
-        recommendation += f" Обратите внимание на нестабильность результатов по этой черте - это может указывать на внутренние противоречия или изменения в вашей жизни."
-    elif stability == 'medium':
-        recommendation += f" Результаты по этой черте показывают умеренную стабильность - продолжайте наблюдать за изменениями."
-    
-    return recommendation
+    """Отключено: не возвращаем общие рекомендации."""
+    return ''

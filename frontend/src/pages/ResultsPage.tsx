@@ -309,14 +309,15 @@ const ResultsPage: React.FC = () => {
       .attr("stroke-width", 2)
       .style("cursor", "pointer")
       .on("mouseover", (event: MouseEvent, d: TraitNode) => {
+        const rec = (d.recommendations || '').trim();
+        const recHtml = rec ? `<br/><br/><em>${rec}</em>` : '';
         setTooltip({
           visible: true,
           content: `
             <strong>${d.id}</strong><br/>
             Балл: ${d.score}/100<br/>
             Уровень: ${d.level}<br/>
-            <br/>${d.description}<br/><br/>
-            <em>${d.recommendations}</em>
+            <br/>${d.description}${recHtml}
           `,
           x: event.pageX + 10,
           y: event.pageY - 10
@@ -431,7 +432,9 @@ const ResultsPage: React.FC = () => {
               <TraitScore>{traitData.score}/100</TraitScore>
               <TraitLevel>{traitData.level}</TraitLevel>
               <TraitDescription>{traitData.description}</TraitDescription>
-              <TraitRecommendations>{traitData.recommendations}</TraitRecommendations>
+              {traitData.recommendations && traitData.recommendations.trim() !== '' && (
+                <TraitRecommendations>{traitData.recommendations}</TraitRecommendations>
+              )}
             </TraitCard>
           ))}
         </TraitGrid>

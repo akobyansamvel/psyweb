@@ -125,7 +125,7 @@ class TestSubmissionView(APIView):
                 'score': score,
                 'level': self.get_trait_level(score),
                 'description': self.get_trait_description(trait, score),
-                'recommendations': self.get_trait_recommendations(trait, score)
+                'recommendations': ''
             }
         
         # Добавляем связи между чертами (простая логика)
@@ -169,20 +169,11 @@ class TestSubmissionView(APIView):
             'Эмпатия': 'Способность понимать чувства и эмоции других людей',
             'Адаптивность': 'Гибкость в изменяющихся условиях'
         }
-        return descriptions.get(trait, f'Черта личности: {trait}')
+        return descriptions.get(trait, trait)
     
     def get_trait_recommendations(self, trait, score):
-        """Возвращает рекомендации по развитию черты личности"""
-        if score >= 80:
-            return f"У вас отлично развита черта '{trait}'. Продолжайте развивать её и используйте для достижения целей."
-        elif score >= 60:
-            return f"Черта '{trait}' развита хорошо. Работайте над её укреплением для лучших результатов."
-        elif score >= 40:
-            return f"Черта '{trait}' развита на среднем уровне. Регулярная практика поможет улучшить её."
-        elif score >= 20:
-            return f"Черта '{trait}' требует развития. Начните с небольших шагов и постепенно увеличивайте нагрузку."
-        else:
-            return f"Черта '{trait}' нуждается в активном развитии. Рассмотрите возможность работы с коучем или психологом."
+        """Временно отключено: возвращаем пустые рекомендации"""
+        return ''
 
 
 class TestResultView(generics.RetrieveAPIView):
