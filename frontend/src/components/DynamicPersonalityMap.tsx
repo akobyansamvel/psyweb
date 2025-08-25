@@ -131,6 +131,7 @@ const Tooltip = styled.div<{ visible: boolean; x: number; y: number }>`
 const DynamicPersonalityMap: React.FC<DynamicPersonalityMapProps> = ({ profile }) => {
   const svgRef = useRef<SVGSVGElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const mousePosRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
   const [tooltip, setTooltip] = useState<{
     visible: boolean;
     x: number;
@@ -147,6 +148,12 @@ const DynamicPersonalityMap: React.FC<DynamicPersonalityMapProps> = ({ profile }
     if (!profile || !svgRef.current || !containerRef.current) return;
 
     const container = containerRef.current;
+
+    // отслеживаем положение курсора для корректировки тултипа без глобального event
+    const onMouseMove = (e: MouseEvent) => {
+      mousePosRef.current = { x: e.clientX, y: e.clientY };
+    };
+    container.addEventListener('mousemove', onMouseMove);
     const width = container.clientWidth - 20;
     const height = 400;
 
@@ -250,12 +257,22 @@ const DynamicPersonalityMap: React.FC<DynamicPersonalityMapProps> = ({ profile }
       })
       .attr("filter", "drop-shadow(0 1px 3px rgba(0, 0, 0, 0.3))")
       .on("mouseover", function(event, d: any) {
-        setTooltip({
-          visible: true,
-          x: event.pageX + 8,
-          y: event.pageY - 8,
-          data: d
-        });
+        const padding = 12;
+        const ttWidth = 220; // примерно как max-width
+        const ttHeight = 120; // примерная высота
+        const viewportW = window.innerWidth;
+        const viewportH = window.innerHeight;
+        let tx = event.clientX + padding;
+        let ty = event.clientY + padding;
+        // если уходит за правый край
+        if (tx + ttWidth > viewportW) tx = event.clientX - ttWidth - padding;
+        // если уходит за нижний край
+        if (ty + ttHeight > viewportH) ty = event.clientY - ttHeight - padding;
+        // учитываем позицию контейнера
+        const rect = container.getBoundingClientRect();
+        tx = Math.max(0, Math.min(viewportW - ttWidth, tx)) - rect.left;
+        ty = Math.max(0, Math.min(viewportH - ttHeight, ty)) - rect.top;
+        setTooltip({ visible: true, x: tx, y: ty, data: d });
         d3.select(this)
           .attr("stroke-width", 3)
           .attr("r", (d: any) => Math.max(22, d.score / 3.5) + 2);
@@ -303,6 +320,20 @@ const DynamicPersonalityMap: React.FC<DynamicPersonalityMapProps> = ({ profile }
           const y = Math.max(25, Math.min(height - 25, d.y));
           return `translate(${x},${y})`;
         });
+      // если тултип открыт, подвинем его ближе к последней позиции курсора
+      if (tooltip.visible) {
+        const padding = 12;
+        const ttWidth = 220;
+        const ttHeight = 120;
+        const viewportW = window.innerWidth;
+        const viewportH = window.innerHeight;
+        const rect = container.getBoundingClientRect();
+        const cx = mousePosRef.current.x;
+        const cy = mousePosRef.current.y;
+        const mx = Math.max(0, Math.min(viewportW - ttWidth, cx + padding)) - rect.left;
+        const my = Math.max(0, Math.min(viewportH - ttHeight, cy + padding)) - rect.top;
+        setTooltip(prev => ({ ...prev, x: mx, y: my }));
+      }
     });
 
     function dragstarted(event: any, d: any) {
@@ -324,6 +355,7 @@ const DynamicPersonalityMap: React.FC<DynamicPersonalityMapProps> = ({ profile }
 
     return () => {
       simulation.stop();
+      container.removeEventListener('mousemove', onMouseMove);
     };
   }, [profile]);
 
