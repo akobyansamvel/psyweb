@@ -130,6 +130,7 @@ const Header: React.FC = () => {
           {isAuthenticated && (
             <>
               <NavLink to="/history">История</NavLink>
+              <NavLink to="/about">О нас</NavLink>
             </>
           )}
         </NavLinks>

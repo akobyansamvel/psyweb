@@ -1,0 +1,218 @@
+[
+    {
+        "model": "api.psytoolkittest",
+        "pk": 1,
+        "fields": {
+            "name": "Big Five Personality Test",
+            "description": "Комплексный тест для оценки пяти основных черт личности: экстраверсия, доброжелательность, добросовестность, нейротизм и открытость опыту.",
+            "psy_toolkit_id": "big5_personality_001",
+            "author": "Dr. John Smith",
+            "category": "personality",
+            "tags": ["big5", "personality", "traits", "psychology"],
+            "raw_data": {
+                "metadata": {
+                    "name": "Big Five Personality Test",
+                    "description": "Комплексный тест для оценки пяти основных черт личности",
+                    "author": "Dr. John Smith",
+                    "category": "personality",
+                    "tags": ["big5", "personality", "traits", "psychology"],
+                    "estimated_duration": 15,
+                    "difficulty_level": "medium",
+                    "question_count": 50
+                }
+            },
+            "is_imported": false,
+            "created_at": "2024-01-01T00:00:00Z",
+            "updated_at": "2024-01-01T00:00:00Z"
+        }
+    },
+    {
+        "model": "api.psytoolkittest",
+        "pk": 2,
+        "fields": {
+            "name": "MBTI Personality Assessment",
+            "description": "Тест Майерс-Бриггс для определения типа личности на основе четырех дихотомий: экстраверсия-интроверсия, сенсорика-интуиция, мышление-чувство, суждение-восприятие.",
+            "psy_toolkit_id": "mbti_assessment_002",
+            "author": "Dr. Sarah Johnson",
+            "category": "personality",
+            "tags": ["mbti", "personality", "type", "assessment"],
+            "raw_data": {
+                "metadata": {
+                    "name": "MBTI Personality Assessment",
+                    "description": "Тест Майерс-Бриггс для определения типа личности",
+                    "author": "Dr. Sarah Johnson",
+                    "category": "personality",
+                    "tags": ["mbti", "personality", "type", "assessment"],
+                    "estimated_duration": 20,
+                    "difficulty_level": "medium",
+                    "question_count": 60
+                }
+            },
+            "is_imported": false,
+            "created_at": "2024-01-01T00:00:00Z",
+            "updated_at": "2024-01-01T00:00:00Z"
+        }
+    },
+    {
+        "model": "api.psytoolkittest",
+        "pk": 3,
+        "fields": {
+            "name": "Raven's Progressive Matrices",
+            "description": "Тест прогрессивных матриц Равена для оценки невербального интеллекта и логического мышления.",
+            "psy_toolkit_id": "raven_matrices_003",
+            "author": "Dr. Michael Brown",
+            "category": "cognitive",
+            "tags": ["intelligence", "cognitive", "logic", "matrices"],
+            "raw_data": {
+                "metadata": {
+                    "name": "Raven's Progressive Matrices",
+                    "description": "Тест прогрессивных матриц Равена для оценки невербального интеллекта",
+                    "author": "Dr. Michael Brown",
+                    "category": "cognitive",
+                    "tags": ["intelligence", "cognitive", "logic", "matrices"],
+                    "estimated_duration": 30,
+                    "difficulty_level": "hard",
+                    "question_count": 36
+                }
+            },
+            "is_imported": false,
+            "created_at": "2024-01-01T00:00:00Z",
+            "updated_at": "2024-01-01T00:00:00Z"
+        }
+    },
+    {
+        "model": "api.psytoolkittest",
+        "pk": 4,
+        "fields": {
+            "name": "Beck Depression Inventory",
+            "description": "Опросник депрессии Бека для оценки тяжести депрессивных симптомов.",
+            "psy_toolkit_id": "beck_depression_004",
+            "author": "Dr. Emily Davis",
+            "category": "clinical",
+            "tags": ["depression", "clinical", "mental_health", "assessment"],
+            "raw_data": {
+                "metadata": {
+                    "name": "Beck Depression Inventory",
+                    "description": "Опросник депрессии Бека для оценки тяжести депрессивных симптомов",
+                    "author": "Dr. Emily Davis",
+                    "category": "clinical",
+                    "tags": ["depression", "clinical", "mental_health", "assessment"],
+                    "estimated_duration": 10,
+                    "difficulty_level": "easy",
+                    "question_count": 21
+                }
+            },
+            "is_imported": false,
+            "created_at": "2024-01-01T00:00:00Z",
+            "updated_at": "2024-01-01T00:00:00Z"
+        }
+    },
+    {
+        "model": "api.psytoolkittest",
+        "pk": 5,
+        "fields": {
+            "name": "Digit Span Memory Test",
+            "description": "Тест на запоминание цифровых последовательностей для оценки рабочей памяти и концентрации внимания.",
+            "psy_toolkit_id": "digit_span_005",
+            "author": "Dr. Robert Wilson",
+            "category": "neuropsychological",
+            "tags": ["memory", "attention", "neuropsychological", "cognitive"],
+            "raw_data": {
+                "metadata": {
+                    "name": "Digit Span Memory Test",
+                    "description": "Тест на запоминание цифровых последовательностей",
+                    "author": "Dr. Robert Wilson",
+                    "category": "neuropsychological",
+                    "tags": ["memory", "attention", "neuropsychological", "cognitive"],
+                    "estimated_duration": 15,
+                    "difficulty_level": "medium",
+                    "question_count": 20
+                }
+            },
+            "is_imported": false,
+            "created_at": "2024-01-01T00:00:00Z",
+            "updated_at": "2024-01-01T00:00:00Z"
+        }
+    },
+    {
+        "model": "api.psytoolkittest",
+        "pk": 6,
+        "fields": {
+            "name": "Social Anxiety Scale",
+            "description": "Шкала социальной тревожности для оценки уровня тревоги в социальных ситуациях.",
+            "psy_toolkit_id": "social_anxiety_006",
+            "author": "Dr. Lisa Anderson",
+            "category": "clinical",
+            "tags": ["anxiety", "social", "clinical", "assessment"],
+            "raw_data": {
+                "metadata": {
+                    "name": "Social Anxiety Scale",
+                    "description": "Шкала социальной тревожности для оценки уровня тревоги",
+                    "author": "Dr. Lisa Anderson",
+                    "category": "clinical",
+                    "tags": ["anxiety", "social", "clinical", "assessment"],
+                    "estimated_duration": 8,
+                    "difficulty_level": "easy",
+                    "question_count": 17
+                }
+            },
+            "is_imported": false,
+            "created_at": "2024-01-01T00:00:00Z",
+            "updated_at": "2024-01-01T00:00:00Z"
+        }
+    },
+    {
+        "model": "api.psytoolkittest",
+        "pk": 7,
+        "fields": {
+            "name": "Emotional Intelligence Test",
+            "description": "Тест эмоционального интеллекта для оценки способности понимать и управлять эмоциями.",
+            "psy_toolkit_id": "emotional_intelligence_007",
+            "author": "Dr. David Thompson",
+            "category": "personality",
+            "tags": ["emotional_intelligence", "personality", "emotions", "assessment"],
+            "raw_data": {
+                "metadata": {
+                    "name": "Emotional Intelligence Test",
+                    "description": "Тест эмоционального интеллекта для оценки способности понимать эмоции",
+                    "author": "Dr. David Thompson",
+                    "category": "personality",
+                    "tags": ["emotional_intelligence", "personality", "emotions", "assessment"],
+                    "estimated_duration": 25,
+                    "difficulty_level": "medium",
+                    "question_count": 45
+                }
+            },
+            "is_imported": false,
+            "created_at": "2024-01-01T00:00:00Z",
+            "updated_at": "2024-01-01T00:00:00Z"
+        }
+    },
+    {
+        "model": "api.psytoolkittest",
+        "pk": 8,
+        "fields": {
+            "name": "Attention Network Test",
+            "description": "Тест сетей внимания для оценки различных компонентов внимания: бдительность, ориентация и исполнительный контроль.",
+            "psy_toolkit_id": "attention_network_008",
+            "author": "Dr. Maria Garcia",
+            "category": "neuropsychological",
+            "tags": ["attention", "neuropsychological", "cognitive", "networks"],
+            "raw_data": {
+                "metadata": {
+                    "name": "Attention Network Test",
+                    "description": "Тест сетей внимания для оценки различных компонентов внимания",
+                    "author": "Dr. Maria Garcia",
+                    "category": "neuropsychological",
+                    "tags": ["attention", "neuropsychological", "cognitive", "networks"],
+                    "estimated_duration": 20,
+                    "difficulty_level": "hard",
+                    "question_count": 40
+                }
+            },
+            "is_imported": false,
+            "created_at": "2024-01-01T00:00:00Z",
+            "updated_at": "2024-01-01T00:00:00Z"
+        }
+    }
+]

@@ -126,6 +126,17 @@ const ActionButtons = styled.div`
   margin-top: 2rem;
 `;
 
+const Disclaimer = styled.div`
+  margin-top: 20px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 12px;
+  padding: 14px 16px;
+  color: rgba(255,255,255,0.9);
+  font-size: 0.95rem;
+  line-height: 1.5;
+`;
+
 const Button = styled.button`
   padding: 1rem 2rem;
   border-radius: 25px;
@@ -434,6 +445,13 @@ const ResultsPage: React.FC = () => {
           Сохранить в историю
         </Button>
       </ActionButtons>
+
+      <Disclaimer>
+        Важно: представленные результаты не являются медицинским диагнозом и не заменяют консультацию
+        специалиста. Это ориентировочная интерпретация, основанная на ваших ответах и эмпирических
+        моделях. Если вы испытываете выраженные симптомы или сомнения, обратитесь к клиническому
+        психологу или врачу‑психотерапевту.
+      </Disclaimer>
     </ResultsContainer>
   );
 };

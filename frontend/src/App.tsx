@@ -6,6 +6,7 @@ import Home from './pages/Home';
 import TestPage from './pages/TestPage';
 import ResultsPage from './pages/ResultsPage';
 import HistoryPage from './pages/HistoryPage';
+import AboutPage from './pages/AboutPage';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import ProtectedRoute from './components/ProtectedRoute';
@@ -50,6 +51,14 @@ const App: React.FC = () => {
                 element={
                   <ProtectedRoute>
                     <HistoryPage />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/about" 
+                element={
+                  <ProtectedRoute>
+                    <AboutPage />
                   </ProtectedRoute>
                 } 
               />
