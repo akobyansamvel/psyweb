@@ -1,0 +1,140 @@
+{
+  "test_id": "pss10",
+  "test_name": "Шкала воспринимаемого стресса (PSS-10)",
+  "test_name_en": "Perceived Stress Scale (PSS-10)",
+  "authors": "Cohen, S., Kamarck, T., & Mermelstein, R.",
+  "year": 1983,
+  "description": "Оценка уровня воспринимаемого стресса за последний месяц.",
+  "instructions": "Пожалуйста, ответьте, как часто за последний месяц вы испытывали те или иные чувства и мысли, указанные в вопросах.",
+  "number_of_questions": 10,
+  "scoring_method": "Ответы оцениваются от 0 до 4. Для прямых вопросов (1, 2, 3, 6, 9, 10) баллы начисляются как есть: Никогда = 0, Почти никогда = 1, Иногда = 2, Довольно часто = 3, Очень часто = 4. Для обратных вопросов (4, 5, 7, 8) баллы инвертируются: Никогда = 4, Почти никогда = 3, Иногда = 2, Довольно часто = 1, Очень часто = 0. Общий балл вычисляется суммированием баллов по всем 10 пунктам.",
+  "interpretation": {
+    "score_range": "0-40",
+    "0-13": "Низкий уровень воспринимаемого стресса",
+    "14-26": "Умеренный уровень воспринимаемого стресса",
+    "27-40": "Высокий уровень воспринимаемого стресса"
+  },
+  "notes": "Результаты теста не являются диагнозом. При высоких показателях рекомендуется обратиться к специалисту.",
+  "questions": [
+    {
+      "question_id": 1,
+      "question_text": "Как часто за последний месяц вы испытывали беспокойство из-за непредвиденных событий?",
+      "scoring_direction": "direct",
+      "answers": [
+        {"answer_id": "1a", "answer_text": "Никогда", "score": 0},
+        {"answer_id": "1b", "answer_text": "Почти никогда", "score": 1},
+        {"answer_id": "1c", "answer_text": "Иногда", "score": 2},
+        {"answer_id": "1d", "answer_text": "Довольно часто", "score": 3},
+        {"answer_id": "1e", "answer_text": "Очень часто", "score": 4}
+      ]
+    },
+    {
+      "question_id": 2,
+      "question_text": "Как часто за последний месяц Вам казалось сложным контролировать важные события Вашей жизни?",
+      "scoring_direction": "direct",
+      "answers": [
+        {"answer_id": "2a", "answer_text": "Никогда", "score": 0},
+        {"answer_id": "2b", "answer_text": "Почти никогда", "score": 1},
+        {"answer_id": "2c", "answer_text": "Иногда", "score": 2},
+        {"answer_id": "2d", "answer_text": "Довольно часто", "score": 3},
+        {"answer_id": "2e", "answer_text": "Очень часто", "score": 4}
+      ]
+    },
+    {
+      "question_id": 3,
+      "question_text": "Как часто за последний месяц Вы испытывали нервное напряжение или стресс?",
+      "scoring_direction": "direct",
+      "answers": [
+        {"answer_id": "3a", "answer_text": "Никогда", "score": 0},
+        {"answer_id": "3b", "answer_text": "Почти никогда", "score": 1},
+        {"answer_id": "3c", "answer_text": "Иногда", "score": 2},
+        {"answer_id": "3d", "answer_text": "Довольно часто", "score": 3},
+        {"answer_id": "3e", "answer_text": "Очень часто", "score": 4}
+      ]
+    },
+    {
+      "question_id": 4,
+      "question_text": "Как часто за последний месяц Вы чувствовали уверенность в том, что справитесь с решением ваших личных проблем?",
+      "scoring_direction": "reverse",
+      "answers": [
+        {"answer_id": "4a", "answer_text": "Никогда", "score": 4},
+        {"answer_id": "4b", "answer_text": "Почти никогда", "score": 3},
+        {"answer_id": "4c", "answer_text": "Иногда", "score": 2},
+        {"answer_id": "4d", "answer_text": "Довольно часто", "score": 1},
+        {"answer_id": "4e", "answer_text": "Очень часто", "score": 0}
+      ]
+    },
+    {
+      "question_id": 5,
+      "question_text": "Как часто за последний месяц Вы чувствовали, что все идет так, как Вы этого хотели?",
+      "scoring_direction": "reverse",
+      "answers": [
+        {"answer_id": "5a", "answer_text": "Никогда", "score": 4},
+        {"answer_id": "5b", "answer_text": "Почти никогда", "score": 3},
+        {"answer_id": "5c", "answer_text": "Иногда", "score": 2},
+        {"answer_id": "5d", "answer_text": "Довольно часто", "score": 1},
+        {"answer_id": "5e", "answer_text": "Очень часто", "score": 0}
+      ]
+    },
+    {
+      "question_id": 6,
+      "question_text": "Как часто за последний месяц Вы думали, что не можете справиться с тем, что вам нужно сделать?",
+      "scoring_direction": "direct",
+      "answers": [
+        {"answer_id": "6a", "answer_text": "Никогда", "score": 0},
+        {"answer_id": "6b", "answer_text": "Почти никогда", "score": 1},
+        {"answer_id": "6c", "answer_text": "Иногда", "score": 2},
+        {"answer_id": "6d", "answer_text": "Довольно часто", "score": 3},
+        {"answer_id": "6e", "answer_text": "Очень часто", "score": 4}
+      ]
+    },
+    {
+      "question_id": 7,
+      "question_text": "Как часто за последний месяц Вы были в состоянии справиться с вашей раздражительностью?",
+      "scoring_direction": "reverse",
+      "answers": [
+        {"answer_id": "7a", "answer_text": "Никогда", "score": 4},
+        {"answer_id": "7b", "answer_text": "Почти никогда", "score": 3},
+        {"answer_id": "7c", "answer_text": "Иногда", "score": 2},
+        {"answer_id": "7d", "answer_text": "Довольно часто", "score": 1},
+        {"answer_id": "7e", "answer_text": "Очень часто", "score": 0}
+      ]
+    },
+    {
+      "question_id": 8,
+      "question_text": "Как часто за последний месяц Вы чувствовали, что владеете ситуацией?",
+      "scoring_direction": "reverse",
+      "answers": [
+        {"answer_id": "8a", "answer_text": "Никогда", "score": 4},
+        {"answer_id": "8b", "answer_text": "Почти никогда", "score": 3},
+        {"answer_id": "8c", "answer_text": "Иногда", "score": 2},
+        {"answer_id": "8d", "answer_text": "Довольно часто", "score": 1},
+        {"answer_id": "8e", "answer_text": "Очень часто", "score": 0}
+      ]
+    },
+    {
+      "question_id": 9,
+      "question_text": "Как часто за последний месяц Вы чувствовали раздражение из-за того, что происходящие события выходили из-под вашего контроля?",
+      "scoring_direction": "direct",
+      "answers": [
+        {"answer_id": "9a", "answer_text": "Никогда", "score": 0},
+        {"answer_id": "9b", "answer_text": "Почти никогда", "score": 1},
+        {"answer_id": "9c", "answer_text": "Иногда", "score": 2},
+        {"answer_id": "9d", "answer_text": "Довольно часто", "score": 3},
+        {"answer_id": "9e", "answer_text": "Очень часто", "score": 4}
+      ]
+    },
+    {
+      "question_id": 10,
+      "question_text": "Как часто за последний месяц вам казалось, что накопившиеся трудности достигли такого предела, что Вы не могли их контролировать?",
+      "scoring_direction": "direct",
+      "answers": [
+        {"answer_id": "10a", "answer_text": "Никогда", "score": 0},
+        {"answer_id": "10b", "answer_text": "Почти никогда", "score": 1},
+        {"answer_id": "10c", "answer_text": "Иногда", "score": 2},
+        {"answer_id": "10d", "answer_text": "Довольно часто", "score": 3},
+        {"answer_id": "10e", "answer_text": "Очень часто", "score": 4}
+      ]
+    }
+  ]
+}
