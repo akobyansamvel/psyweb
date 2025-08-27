@@ -156,13 +156,34 @@ def generate_dynamic_personality_map(test_results, patterns):
     all_traits = {}
     trait_counts = defaultdict(int)
     
+    def map_trait_key(trait: str, test_name: str) -> str:
+        k = (trait or '').lower()
+        name_l = (test_name or '').lower()
+        if k in ['general_trait', 'general', 'trait']:
+            if 'pss' in name_l or 'stress' in name_l:
+                return 'Уровень стресса'
+            if 'rosenberg' in name_l or 'self-esteem' in name_l or 'self esteem' in name_l:
+                return 'Самооценка'
+            if 'satisfaction with life' in name_l or 'swls' in name_l:
+                return 'Удовлетворённость жизнью'
+            if 'phq' in name_l or 'beck' in name_l or 'bdi' in name_l:
+                return 'Уровень депрессии'
+            if 'gad' in name_l or 'anx' in name_l:
+                return 'Уровень тревожности'
+            if 'big five' in name_l or 'ipip' in name_l or 'big 5' in name_l:
+                return 'Черты Большой пятёрки'
+            return 'Итоговый показатель'
+        return trait
+
     for result in test_results:
         scores = result.score if isinstance(result.score, dict) else {}
+        test_name = getattr(result.test, 'name', '')
         for trait, score in scores.items():
-            if trait not in all_traits:
-                all_traits[trait] = []
-            all_traits[trait].append(score)
-            trait_counts[trait] += 1
+            display_trait = map_trait_key(trait, test_name)
+            if display_trait not in all_traits:
+                all_traits[display_trait] = []
+            all_traits[display_trait].append(score)
+            trait_counts[display_trait] += 1
     
     # Вычисляем средние значения и стабильность
     dynamic_traits = {}

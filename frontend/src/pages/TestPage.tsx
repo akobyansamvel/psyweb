@@ -394,7 +394,7 @@ const TestPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState<number>(0);
   const [answers, setAnswers] = useState<Record<string, number>>({});
-  const [confidenceLevels, setConfidenceLevels] = useState<Record<string, number>>({});
+  // confidenceLevels отключены
   const [responseTimes, setResponseTimes] = useState<Record<string, number>>({});
   const [questionStartTime, setQuestionStartTime] = useState<number>(Date.now());
 
@@ -429,9 +429,7 @@ const TestPage: React.FC = () => {
     setResponseTimes(prev => ({ ...prev, [questionId]: responseTime }));
   };
 
-  const handleConfidenceChange = (questionId: string, confidence: number): void => {
-    setConfidenceLevels(prev => ({ ...prev, [questionId]: confidence }));
-  };
+  // confidence slider отключен
 
   const goToNextQuestion = (): void => {
     if (test && currentQuestionIndex < test.questions.length - 1) {
@@ -456,12 +454,9 @@ const TestPage: React.FC = () => {
         body: JSON.stringify({
           answers,
           response_time: responseTimes,
-          confidence_levels: confidenceLevels,
           metadata: {
             total_time: Object.values(responseTimes).reduce((sum, t) => sum + t, 0),
-            average_confidence: Object.values(confidenceLevels).length > 0
-              ? Object.values(confidenceLevels).reduce((s, c) => s + c, 0) / Object.values(confidenceLevels).length
-              : 0
+            average_confidence: 0
           }
         })
       });
@@ -587,27 +582,7 @@ const TestPage: React.FC = () => {
           ))}
         </AnswerOptions>
 
-        {answers[currentQuestion.id] && (
-          <ConfidenceSection>
-            <ConfidenceLabel>
-              Насколько вы уверены в своем ответе?
-            </ConfidenceLabel>
-            <ConfidenceSlider
-              type="range"
-              min="1"
-              max="5"
-              value={confidenceLevels[currentQuestion.id] || 3}
-              onChange={(e) => handleConfidenceChange(currentQuestion.id.toString(), parseInt(e.target.value))}
-            />
-            <ConfidenceValue>
-              {confidenceLevels[currentQuestion.id] === 1 && 'Совсем не уверен'}
-              {confidenceLevels[currentQuestion.id] === 2 && 'Скорее не уверен'}
-              {confidenceLevels[currentQuestion.id] === 3 && 'Затрудняюсь ответить'}
-              {confidenceLevels[currentQuestion.id] === 4 && 'Скорее уверен'}
-              {confidenceLevels[currentQuestion.id] === 5 && 'Полностью уверен'}
-            </ConfidenceValue>
-          </ConfidenceSection>
-        )}
+        {/* шкала уверенности отключена */}
       </QuestionCard>
 
       <NavigationButtons>

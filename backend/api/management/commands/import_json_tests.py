@@ -58,6 +58,12 @@ class Command(BaseCommand):
                     if force:
                         Test.objects.filter(name=name).delete()
 
+                    # Собираем расширенные определения результатов: results/types/scoring/graph/categories
+                    extra_defs = {}
+                    for key in ['results', 'types', 'scoring', 'graph', 'categories']:
+                        if t.get(key) is not None:
+                            extra_defs[key] = t.get(key)
+
                     test_obj, created = Test.objects.get_or_create(
                         name=name,
                         defaults={
@@ -67,6 +73,7 @@ class Command(BaseCommand):
                             'source': 'import_json',
                             'image_url': image_url,
                             'is_active': True,
+                            'result_definitions': extra_defs
                         }
                     )
 
@@ -84,23 +91,47 @@ class Command(BaseCommand):
                         test_obj.estimated_duration = duration
                         test_obj.image_url = image_url
                         test_obj.source = 'import_json'
+                        # обновляем расширенные определения
+                        extra_defs = {}
+                        for key in ['results', 'types', 'scoring', 'graph', 'categories']:
+                            if t.get(key) is not None:
+                                extra_defs[key] = t.get(key)
+                        test_obj.result_definitions = extra_defs
                         test_obj.is_active = True
                         test_obj.save()
 
                     questions = t.get('questions') or []
                     for idx, q in enumerate(questions, start=1):
                         q_text = q.get('question_text') or q.get('text') or f'Вопрос {idx}'
+                        q_dimension = q.get('dimension') or None
                         q_img = q.get('image_url') or None
                         question = Question.objects.create(
                             test=test_obj,
                             text=q_text,
                             order=idx,
+                            dimension=q_dimension,
                             image_url=q_img,
                         )
 
                         answers = q.get('answers') or []
+                        # если answers отсутствуют, попробуем options/variants (двухвариантные ответы)
                         if not answers:
-                            # добавим дефолтную шкалу Лайкерта
+                            options = q.get('options') or q.get('variants') or []
+                            if options:
+                                mapped = []
+                                for opt in options:
+                                    t_opt = opt.get('text') or opt.get('answer_text') or ''
+                                    s_opt = opt.get('score')
+                                    trait_override = opt.get('personality_trait') or q.get('trait')
+                                    try:
+                                        val = int(s_opt)
+                                        mapped.append({ 'answer_text': t_opt, 'score': val, 'personality_trait': trait_override })
+                                    except Exception:
+                                        # если score не число (буква), считаем value=1, а букву используем как trait
+                                        mapped.append({ 'answer_text': t_opt, 'score': 1, 'personality_trait': str(s_opt) if s_opt is not None else trait_override })
+                                answers = mapped
+                        # если всё ещё пусто — дефолтная шкала (4 варианта)
+                        if not answers:
                             answers = [
                                 { 'answer_text': 'Никогда', 'score': 0 },
                                 { 'answer_text': 'Редко', 'score': 1 },
@@ -114,11 +145,14 @@ class Command(BaseCommand):
                                 value = int(a_val) if a_val is not None else 0
                             except Exception:
                                 value = 0
+                            # Позволяем задавать черту на уровне вопроса или ответа
+                            trait_override = a.get('personality_trait') or q.get('trait')
+                            trait_value = trait_override if trait_override else self._infer_trait(test_type)
                             Answer.objects.create(
                                 question=question,
                                 text=a_text,
                                 value=value,
-                                personality_trait=self._infer_trait(test_type),
+                                personality_trait=trait_value,
                                 is_correct=bool(a.get('is_correct', False))
                             )
 
@@ -141,12 +175,37 @@ class Command(BaseCommand):
         return 'general'
 
     def _infer_trait(self, test_type: str) -> str:
-        if test_type == 'clinical':
-            return 'clinical_trait'
-        if test_type == 'cognitive':
-            return 'cognitive_trait'
+        """Возвращает более конкретный ключ черты вместо общего general_trait."""
+        # Попытаемся извлечь название теста из self.current_test, если доступно
+        test_name = ''
+        try:
+            test_name = (getattr(self, 'current_test', None) or {}).get('name', '') or ''
+        except Exception:
+            test_name = ''
+
+        name_l = (test_name or '').lower()
+
+        # Клинические
+        if any(k in name_l for k in ['phq', 'depress', 'beck', 'bdi']):
+            return 'depression'
+        if any(k in name_l for k in ['gad', 'anxiet']):
+            return 'anxiety'
+        # Стресс
+        if any(k in name_l for k in ['pss', 'stress']):
+            return 'stress'
+        # Самооценка
+        if 'rosenberg' in name_l or 'self-esteem' in name_l or 'self esteem' in name_l:
+            return 'self_esteem'
+        # Удовлетворенность жизнью
+        if 'satisfaction with life' in name_l or 'swls' in name_l:
+            return 'life_satisfaction'
+        # Большая пятёрка и т.п.
         if test_type == 'personality':
-            return 'personality_trait'
-        return 'general_trait'
+            return 'big5'
+        if test_type == 'cognitive':
+            return 'cognitive'
+        if test_type == 'clinical':
+            return 'clinical'
+        return 'general'
 
 

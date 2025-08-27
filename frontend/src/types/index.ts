@@ -19,6 +19,7 @@ export interface Test {
   questions: Question[];
   created_at: string;
   is_active: boolean;
+  result_definitions?: Record<string, any>;
 }
 
 export interface Question {
@@ -43,7 +44,7 @@ export interface TestResult {
   personality_map: PersonalityMap;
   score: Record<string, number>;
   response_time: Record<string, number>;
-  confidence_levels: Record<string, number>;
+  // confidence_levels убраны
   metadata: Record<string, any>;
   completed_at: string;
 }
@@ -60,6 +61,8 @@ export interface TraitInfo {
   level: string;
   description: string;
   recommendations: string;
+  raw_score?: number;
+  max_score?: number;
 }
 
 export interface Connection {
@@ -103,7 +106,7 @@ export interface TraitHistoryEntry {
   test_name: string;
   score: number;
   date: string;
-  confidence: number;
+  // confidence убран
   response_time: number;
 }
 
@@ -125,7 +128,7 @@ export interface PatternAnalysis {
   inconsistencies: Inconsistency[];
   correlations: Correlation[];
   trends: Record<string, any>;
-  confidence_patterns: Record<string, any>;
+  // confidence_patterns убран
   response_time_patterns: Record<string, any>;
 }
 
@@ -154,7 +157,6 @@ export interface RegisterForm {
 export interface TestSubmission {
   answers: Record<string, number>;
   response_time?: Record<string, number>;
-  confidence_levels?: Record<string, number>;
   metadata?: Record<string, any>;
 }
 

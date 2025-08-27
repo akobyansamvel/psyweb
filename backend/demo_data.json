@@ -1,140 +1,81 @@
 {
-  "test_id": "pss10",
-  "test_name": "Шкала воспринимаемого стресса (PSS-10)",
-  "test_name_en": "Perceived Stress Scale (PSS-10)",
-  "authors": "Cohen, S., Kamarck, T., & Mermelstein, R.",
-  "year": 1983,
-  "description": "Оценка уровня воспринимаемого стресса за последний месяц.",
-  "instructions": "Пожалуйста, ответьте, как часто за последний месяц вы испытывали те или иные чувства и мысли, указанные в вопросах.",
-  "number_of_questions": 10,
-  "scoring_method": "Ответы оцениваются от 0 до 4. Для прямых вопросов (1, 2, 3, 6, 9, 10) баллы начисляются как есть: Никогда = 0, Почти никогда = 1, Иногда = 2, Довольно часто = 3, Очень часто = 4. Для обратных вопросов (4, 5, 7, 8) баллы инвертируются: Никогда = 4, Почти никогда = 3, Иногда = 2, Довольно часто = 1, Очень часто = 0. Общий балл вычисляется суммированием баллов по всем 10 пунктам.",
-  "interpretation": {
-    "score_range": "0-40",
-    "0-13": "Низкий уровень воспринимаемого стресса",
-    "14-26": "Умеренный уровень воспринимаемого стресса",
-    "27-40": "Высокий уровень воспринимаемого стресса"
-  },
-  "notes": "Результаты теста не являются диагнозом. При высоких показателях рекомендуется обратиться к специалисту.",
-  "questions": [
-    {
-      "question_id": 1,
-      "question_text": "Как часто за последний месяц вы испытывали беспокойство из-за непредвиденных событий?",
-      "scoring_direction": "direct",
-      "answers": [
-        {"answer_id": "1a", "answer_text": "Никогда", "score": 0},
-        {"answer_id": "1b", "answer_text": "Почти никогда", "score": 1},
-        {"answer_id": "1c", "answer_text": "Иногда", "score": 2},
-        {"answer_id": "1d", "answer_text": "Довольно часто", "score": 3},
-        {"answer_id": "1e", "answer_text": "Очень часто", "score": 4}
-      ]
+    "name": "Тест на стиль привязанности",
+    "title": "Тест на стиль привязанности",
+    "description": "Ответьте на вопросы, чтобы определить ваш стиль привязанности в отношениях. Результат покажет ваш тип и карту эмоциональной близости, зависимости, страха потери и избегания.",
+    "questions": [
+      {"id":1,"text":"Мне легко доверять партнёру.","dimension":"closeness","options":[{"text":"Согласен","score":1},{"text":"Не согласен","score":0}]},
+      {"id":2,"text":"Я часто боюсь, что партнёр меня бросит.","dimension":"anxiety","options":[{"text":"Согласен","score":1},{"text":"Не согласен","score":0}]},
+      {"id":3,"text":"Мне сложно открываться эмоционально.","dimension":"avoidance","options":[{"text":"Согласен","score":1},{"text":"Не согласен","score":0}]},
+      {"id":4,"text":"Я люблю быть независимым даже в близких отношениях.","dimension":"independence","options":[{"text":"Согласен","score":1},{"text":"Не согласен","score":0}]},
+      {"id":5,"text":"Я чувствую себя комфортно, делясь своими чувствами с партнёром.","dimension":"closeness","options":[{"text":"Согласен","score":1},{"text":"Не согласен","score":0}]},
+      {"id":6,"text":"Я часто беспокоюсь о том, что партнёр меня не любит достаточно.","dimension":"anxiety","options":[{"text":"Согласен","score":1},{"text":"Не согласен","score":0}]},
+      {"id":7,"text":"Я предпочитаю держать дистанцию даже с близким человеком.","dimension":"avoidance","options":[{"text":"Согласен","score":1},{"text":"Не согласен","score":0}]},
+      {"id":8,"text":"Мне важно сохранять свою независимость в отношениях.","dimension":"independence","options":[{"text":"Согласен","score":1},{"text":"Не согласен","score":0}]},
+      {"id":9,"text":"Я легко полагаюсь на партнёра в трудных ситуациях.","dimension":"closeness","options":[{"text":"Согласен","score":1},{"text":"Не согласен","score":0}]},
+      {"id":10,"text":"Я боюсь, что меня бросят, если я проявлю слабость.","dimension":"anxiety","options":[{"text":"Согласен","score":1},{"text":"Не согласен","score":0}]},
+      {"id":11,"text":"Мне трудно делиться своими мыслями и чувствами.","dimension":"avoidance","options":[{"text":"Согласен","score":1},{"text":"Не согласен","score":0}]},
+      {"id":12,"text":"Я предпочитаю решать свои проблемы самостоятельно, а не просить помощи у партнёра.","dimension":"independence","options":[{"text":"Согласен","score":1},{"text":"Не согласен","score":0}]},
+      {"id":13,"text":"Я чувствую себя спокойно и уверенно в отношениях.","dimension":"closeness","options":[{"text":"Согласен","score":1},{"text":"Не согласен","score":0}]},
+      {"id":14,"text":"Я переживаю из-за возможной потери партнёра.","dimension":"anxiety","options":[{"text":"Согласен","score":1},{"text":"Не согласен","score":0}]},
+      {"id":15,"text":"Я избегаю эмоциональной близости с партнёром.","dimension":"avoidance","options":[{"text":"Согласен","score":1},{"text":"Не согласен","score":0}]},
+      {"id":16,"text":"Мне важно сохранять личное пространство и автономию в отношениях.","dimension":"independence","options":[{"text":"Согласен","score":1},{"text":"Не согласен","score":0}]},
+      {"id":17,"text":"Я доверяю партнёру и могу быть уязвимым рядом с ним.","dimension":"closeness","options":[{"text":"Согласен","score":1},{"text":"Не согласен","score":0}]},
+      {"id":18,"text":"Я часто сомневаюсь в чувствах партнёра ко мне.","dimension":"anxiety","options":[{"text":"Согласен","score":1},{"text":"Не согласен","score":0}]},
+      {"id":19,"text":"Мне трудно полагаться на других эмоционально.","dimension":"avoidance","options":[{"text":"Согласен","score":1},{"text":"Не согласен","score":0}]},
+      {"id":20,"text":"Я ценю свою независимость выше эмоциональной близости.","dimension":"independence","options":[{"text":"Согласен","score":1},{"text":"Не согласен","score":0}]},
+      {"id":21,"text":"Я могу легко принимать любовь и заботу от партнёра.","dimension":"closeness","options":[{"text":"Согласен","score":1},{"text":"Не согласен","score":0}]},
+      {"id":22,"text":"Я переживаю, что партнёр может меня отвергнуть.","dimension":"anxiety","options":[{"text":"Согласен","score":1},{"text":"Не согласен","score":0}]},
+      {"id":23,"text":"Я склонен избегать эмоционально близких ситуаций.","dimension":"avoidance","options":[{"text":"Согласен","score":1},{"text":"Не согласен","score":0}]},
+      {"id":24,"text":"Я предпочитаю решать свои проблемы без помощи партнёра.","dimension":"independence","options":[{"text":"Согласен","score":1},{"text":"Не согласен","score":0}]}
+    ],
+    "scoring": {
+      "dimensions": {
+        "closeness": [1,5,9,13,17,21],
+        "anxiety": [2,6,10,14,18,22],
+        "avoidance": [3,7,11,15,19,23],
+        "independence": [4,8,12,16,20,24]
+      },
+      "rules": {
+        "secure": {"closeness_min":4,"anxiety_max":2,"avoidance_max":2},
+        "avoidant": {"avoidance_min":4,"closeness_max":3},
+        "anxious": {"anxiety_min":4,"closeness_max":3},
+        "disorganized": {"anxiety_min":3,"avoidance_min":3}
+      }
     },
-    {
-      "question_id": 2,
-      "question_text": "Как часто за последний месяц Вам казалось сложным контролировать важные события Вашей жизни?",
-      "scoring_direction": "direct",
-      "answers": [
-        {"answer_id": "2a", "answer_text": "Никогда", "score": 0},
-        {"answer_id": "2b", "answer_text": "Почти никогда", "score": 1},
-        {"answer_id": "2c", "answer_text": "Иногда", "score": 2},
-        {"answer_id": "2d", "answer_text": "Довольно часто", "score": 3},
-        {"answer_id": "2e", "answer_text": "Очень часто", "score": 4}
-      ]
+    "graph": {
+      "axes": ["Closeness","Anxiety","Avoidance","Independence"],
+      "max_score": 6,
+      "example": {"Closeness":5,"Anxiety":2,"Avoidance":1,"Independence":4}
     },
-    {
-      "question_id": 3,
-      "question_text": "Как часто за последний месяц Вы испытывали нервное напряжение или стресс?",
-      "scoring_direction": "direct",
-      "answers": [
-        {"answer_id": "3a", "answer_text": "Никогда", "score": 0},
-        {"answer_id": "3b", "answer_text": "Почти никогда", "score": 1},
-        {"answer_id": "3c", "answer_text": "Иногда", "score": 2},
-        {"answer_id": "3d", "answer_text": "Довольно часто", "score": 3},
-        {"answer_id": "3e", "answer_text": "Очень часто", "score": 4}
-      ]
-    },
-    {
-      "question_id": 4,
-      "question_text": "Как часто за последний месяц Вы чувствовали уверенность в том, что справитесь с решением ваших личных проблем?",
-      "scoring_direction": "reverse",
-      "answers": [
-        {"answer_id": "4a", "answer_text": "Никогда", "score": 4},
-        {"answer_id": "4b", "answer_text": "Почти никогда", "score": 3},
-        {"answer_id": "4c", "answer_text": "Иногда", "score": 2},
-        {"answer_id": "4d", "answer_text": "Довольно часто", "score": 1},
-        {"answer_id": "4e", "answer_text": "Очень часто", "score": 0}
-      ]
-    },
-    {
-      "question_id": 5,
-      "question_text": "Как часто за последний месяц Вы чувствовали, что все идет так, как Вы этого хотели?",
-      "scoring_direction": "reverse",
-      "answers": [
-        {"answer_id": "5a", "answer_text": "Никогда", "score": 4},
-        {"answer_id": "5b", "answer_text": "Почти никогда", "score": 3},
-        {"answer_id": "5c", "answer_text": "Иногда", "score": 2},
-        {"answer_id": "5d", "answer_text": "Довольно часто", "score": 1},
-        {"answer_id": "5e", "answer_text": "Очень часто", "score": 0}
-      ]
-    },
-    {
-      "question_id": 6,
-      "question_text": "Как часто за последний месяц Вы думали, что не можете справиться с тем, что вам нужно сделать?",
-      "scoring_direction": "direct",
-      "answers": [
-        {"answer_id": "6a", "answer_text": "Никогда", "score": 0},
-        {"answer_id": "6b", "answer_text": "Почти никогда", "score": 1},
-        {"answer_id": "6c", "answer_text": "Иногда", "score": 2},
-        {"answer_id": "6d", "answer_text": "Довольно часто", "score": 3},
-        {"answer_id": "6e", "answer_text": "Очень часто", "score": 4}
-      ]
-    },
-    {
-      "question_id": 7,
-      "question_text": "Как часто за последний месяц Вы были в состоянии справиться с вашей раздражительностью?",
-      "scoring_direction": "reverse",
-      "answers": [
-        {"answer_id": "7a", "answer_text": "Никогда", "score": 4},
-        {"answer_id": "7b", "answer_text": "Почти никогда", "score": 3},
-        {"answer_id": "7c", "answer_text": "Иногда", "score": 2},
-        {"answer_id": "7d", "answer_text": "Довольно часто", "score": 1},
-        {"answer_id": "7e", "answer_text": "Очень часто", "score": 0}
-      ]
-    },
-    {
-      "question_id": 8,
-      "question_text": "Как часто за последний месяц Вы чувствовали, что владеете ситуацией?",
-      "scoring_direction": "reverse",
-      "answers": [
-        {"answer_id": "8a", "answer_text": "Никогда", "score": 4},
-        {"answer_id": "8b", "answer_text": "Почти никогда", "score": 3},
-        {"answer_id": "8c", "answer_text": "Иногда", "score": 2},
-        {"answer_id": "8d", "answer_text": "Довольно часто", "score": 1},
-        {"answer_id": "8e", "answer_text": "Очень часто", "score": 0}
-      ]
-    },
-    {
-      "question_id": 9,
-      "question_text": "Как часто за последний месяц Вы чувствовали раздражение из-за того, что происходящие события выходили из-под вашего контроля?",
-      "scoring_direction": "direct",
-      "answers": [
-        {"answer_id": "9a", "answer_text": "Никогда", "score": 0},
-        {"answer_id": "9b", "answer_text": "Почти никогда", "score": 1},
-        {"answer_id": "9c", "answer_text": "Иногда", "score": 2},
-        {"answer_id": "9d", "answer_text": "Довольно часто", "score": 3},
-        {"answer_id": "9e", "answer_text": "Очень часто", "score": 4}
-      ]
-    },
-    {
-      "question_id": 10,
-      "question_text": "Как часто за последний месяц вам казалось, что накопившиеся трудности достигли такого предела, что Вы не могли их контролировать?",
-      "scoring_direction": "direct",
-      "answers": [
-        {"answer_id": "10a", "answer_text": "Никогда", "score": 0},
-        {"answer_id": "10b", "answer_text": "Почти никогда", "score": 1},
-        {"answer_id": "10c", "answer_text": "Иногда", "score": 2},
-        {"answer_id": "10d", "answer_text": "Довольно часто", "score": 3},
-        {"answer_id": "10e", "answer_text": "Очень часто", "score": 4}
-      ]
+    "results": {
+      "secure": {
+        "name": "Надёжный",
+        "description": "Вы комфортно чувствуете себя в близких отношениях, легко доверяете партнёру и открыты для эмоциональной близости.",
+        "strengths": ["Умение доверять","Эмоциональная открытость","Стабильность и надёжность"],
+        "weaknesses": ["Иногда слишком доверчивы","Могут игнорировать проблемы партнёра"],
+        "advice": ["Поддерживайте баланс близости и самостоятельности","Слушайте партнёра и обсуждайте эмоции"]
+      },
+      "avoidant": {
+        "name": "Избегающий",
+        "description": "Вы склонны держать дистанцию, избегаете эмоциональной близости и цените независимость.",
+        "strengths": ["Самостоятельность","Эмоциональная независимость","Способность сохранять личное пространство"],
+        "weaknesses": ["Трудно открываться партнёру","Может создавать дистанцию в отношениях"],
+        "advice": ["Учитесь доверять партнёру","Позволяйте себе эмоциональную близость"]
+      },
+      "anxious": {
+        "name": "Тревожно-амбивалентный",
+        "description": "Вы сильно нуждаетесь в подтверждении любви и боитесь потери партнёра. Часто переживаете и сомневаетесь в чувствах партнёра.",
+        "strengths": ["Эмоциональная вовлечённость","Стремление к близости","Чувствительность к партнёру"],
+        "weaknesses": ["Чрезмерная зависимость","Страх потери","Эмоциональные перепады"],
+        "advice": ["Работайте над уверенностью в себе","Учитесь доверять партнёру","Развивайте независимость"]
+      },
+      "disorganized": {
+        "name": "Дезорганизованный",
+        "description": "Вы одновременно боитесь близости и нуждаетесь в ней. Часто испытываете внутренний конфликт в отношениях.",
+        "strengths": ["Эмоциональная глубина","Чувствительность","Способность к самоанализу"],
+        "weaknesses": ["Страх близости","Неустойчивость эмоций","Противоречивые реакции в отношениях"],
+        "advice": ["Работайте над эмоциональной стабильностью","Учитесь доверять и принимать любовь","Развивайте навыки коммуникации"]
+      }
     }
-  ]
-}
+  }
+  

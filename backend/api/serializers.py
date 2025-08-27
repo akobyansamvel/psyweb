@@ -11,19 +11,55 @@ class UserSerializer(serializers.ModelSerializer):
 
 
 class AnswerSerializer(serializers.ModelSerializer):
+    text = serializers.SerializerMethodField()
     class Meta:
         model = Answer
         fields = ('id', 'text', 'value', 'personality_trait')
 
+    def get_text(self, obj):
+        """Локализуем частые английские слова в ответах."""
+        t = obj.text or ''
+        mapping = {
+            'Agree': 'Согласен',
+            'Strongly agree': 'Полностью согласен',
+            'Disagree': 'Не согласен',
+            'Strongly disagree': 'Полностью не согласен',
+            'Neutral': 'Нейтрально',
+            'Sometimes': 'Иногда',
+            'Often': 'Часто',
+            'Never': 'Никогда',
+            'Always': 'Всегда',
+            'Yes': 'Да',
+            'No': 'Нет'
+        }
+        return mapping.get(t, t)
+
 
 class QuestionSerializer(serializers.ModelSerializer):
     answers = AnswerSerializer(many=True, read_only=True)
+    text = serializers.SerializerMethodField()
     
     class Meta:
         model = Question
         fields = (
             'id', 'text', 'order', 'image_url', 'image_alt', 'answers'
         )
+
+    def get_text(self, obj):
+        """Локализуем частые английские слова в вопросах."""
+        t = obj.text or ''
+        replacements = {
+            'How often': 'Как часто',
+            'I feel': 'Я чувствую',
+            'In the last week': 'За последнюю неделю',
+            'In the past two weeks': 'За последние две недели',
+            'I have trouble': 'Мне сложно',
+            'I find it hard': 'Мне трудно'
+        }
+        for en, ru in replacements.items():
+            if en in t:
+                t = t.replace(en, ru)
+        return t
 
 
 def _localize_test_name(name: str) -> str:
@@ -73,7 +109,7 @@ class TestSerializer(serializers.ModelSerializer):
         model = Test
         fields = (
             'id', 'name', 'name_localized', 'description', 'image_url', 'questions', 'question_count', 'created_at', 'is_active', 
-            'source', 'psy_toolkit_id', 'test_type', 'estimated_duration', 'difficulty_level'
+            'source', 'psy_toolkit_id', 'test_type', 'estimated_duration', 'difficulty_level', 'result_definitions'
         )
     
     def get_question_count(self, obj):
@@ -108,11 +144,7 @@ class TestSubmissionSerializer(serializers.Serializer):
         required=False,
         help_text="Время ответа на каждый вопрос в секундах"
     )
-    confidence_levels = serializers.DictField(
-        child=serializers.IntegerField(min_value=1, max_value=5),
-        required=False,
-        help_text="Уровень уверенности в ответах (1-5)"
-    )
+    # confidence_levels убран как неиспользуемый
     metadata = serializers.DictField(
         required=False,
         help_text="Дополнительные метаданные"

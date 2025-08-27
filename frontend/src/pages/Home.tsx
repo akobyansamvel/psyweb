@@ -14,7 +14,7 @@ interface Test {
   is_active: boolean;
 }
 
-// Временная локализация названий тестов на фронте
+// Временная локализация названий тестов на фронтеI
 const localizeTestName = (name: string): string => {
   // Убираем числовые счётчики в скобках, если они есть (например, "(50)")
   const normalizedName = name.replace(/\s*\(\s*\d+\s*\)\s*$/g, '');

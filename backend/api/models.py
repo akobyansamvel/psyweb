@@ -17,6 +17,8 @@ class Test(models.Model):
     difficulty_level = models.CharField(max_length=20, default='medium', verbose_name="Уровень сложности")
     # Обложка/изображение теста (опционально)
     image_url = models.URLField(blank=True, null=True, verbose_name="URL изображения теста")
+    # Полные определения результатов (например, MBTI типы, описания, советы)
+    result_definitions = models.JSONField(default=dict, verbose_name="Определения результатов", blank=True)
     
     
     class Meta:
@@ -58,6 +60,8 @@ class Question(models.Model):
     question_type = models.CharField(max_length=50, default='multiple_choice', verbose_name="Тип вопроса")
     psy_toolkit_data = models.JSONField(default=dict, verbose_name="Данные PsyToolkit")
     required = models.BooleanField(default=True, verbose_name="Обязательный")
+    # Дименсия (для MBTI: E/I, S/N, T/F, J/P)
+    dimension = models.CharField(max_length=8, blank=True, null=True, verbose_name="Дихотомия/шкала")
     # Изображение для вопроса (опционально)
     image_url = models.URLField(blank=True, null=True, verbose_name="URL изображения вопроса")
     image_alt = models.CharField(max_length=255, blank=True, null=True, verbose_name="Описание изображения")

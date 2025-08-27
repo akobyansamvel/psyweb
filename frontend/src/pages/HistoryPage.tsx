@@ -5,7 +5,7 @@ import styled from 'styled-components';
 import axios from 'axios';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { TestResult, DynamicProfile } from '../types';
-import DynamicPersonalityMap from '../components/DynamicPersonalityMap';
+import PersonalityRadar from '../components/PersonalityRadar';
 
 const HistoryContainer = styled.div`
   max-width: 1200px;
@@ -336,10 +336,7 @@ const HistoryPage: React.FC = () => {
       </Header>
 
       {dynamicProfile && (
-        <DynamicProfileSection>
-          <DynamicProfileTitle>Динамический профиль личности</DynamicProfileTitle>
-          <DynamicPersonalityMap profile={dynamicProfile} />
-        </DynamicProfileSection>
+        <PersonalityRadar profile={dynamicProfile} />
       )}
 
       {chartData.length > 1 && (

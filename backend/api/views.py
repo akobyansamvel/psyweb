@@ -47,7 +47,6 @@ class TestSubmissionView(APIView):
         if serializer.is_valid():
             answers = serializer.validated_data['answers']
             response_time = serializer.validated_data.get('response_time', {})
-            confidence_levels = serializer.validated_data.get('confidence_levels', {})
             metadata = serializer.validated_data.get('metadata', {})
             
             # Проверяем, что все вопросы теста отвечены
@@ -70,7 +69,6 @@ class TestSubmissionView(APIView):
                     personality_map=personality_map,
                     score=scores,
                     response_time=response_time,
-                    confidence_levels=confidence_levels,
                     metadata=metadata
                 )
             
@@ -85,13 +83,23 @@ class TestSubmissionView(APIView):
     
     def generate_personality_map(self, test, answers):
         """Генерирует карту личности на основе ответов"""
-        # Получаем все ответы пользователя
+        # Получаем все ответы пользователя и максимум по каждому вопросу
         user_answers = []
+        per_question_max_values = {}  # question_id -> max value among its answers
         for question_id, answer_id in answers.items():
             try:
                 answer = Answer.objects.get(id=answer_id)
+                # вычисляем максимум для вопроса (0 если нет вариантов)
+                try:
+                    q = answer.question
+                    if q and q.answers.exists():
+                        per_question_max_values[str(q.id)] = max(a.value for a in q.answers.all())
+                except Exception:
+                    # fallback: если нет доступа к списку ответов, считаем максимум как выбранное значение
+                    per_question_max_values[str(question_id)] = max(per_question_max_values.get(str(question_id), 0), answer.value)
+
                 user_answers.append({
-                    'question_id': question_id,
+                    'question_id': str(question_id),
                     'answer_id': answer_id,
                     'personality_trait': answer.personality_trait,
                     'value': answer.value
@@ -99,18 +107,177 @@ class TestSubmissionView(APIView):
             except Answer.DoesNotExist:
                 continue
         
-        # Подсчитываем баллы по чертам личности
+        # Специальная логика для тестов с явной схемой подсчёта (например, стиль привязанности)
+        try:
+            test_scoring = getattr(test, 'result_definitions', {}) or {}
+            scoring_cfg = test_scoring.get('scoring') or test_scoring.get('SCORING')
+            graph_cfg = test_scoring.get('graph') or {}
+        except Exception:
+            scoring_cfg = None
+            graph_cfg = {}
+
+        if scoring_cfg and isinstance(scoring_cfg, dict) and scoring_cfg.get('dimensions'):
+            # Считаем сырые баллы по заданным измерениям, используя порядковые номера вопросов
+            dim_to_orders = scoring_cfg.get('dimensions', {})
+            # Строим индекс: order -> выбранное значение
+            order_to_value = {}
+            try:
+                for qa in user_answers:
+                    # получаем order через модель Question
+                    a_obj = Answer.objects.get(id=qa['answer_id'])
+                    q_order = getattr(a_obj.question, 'order', None)
+                    if q_order is not None:
+                        order_to_value[int(q_order)] = qa['value']
+            except Exception:
+                pass
+
+            dim_raw = {}
+            dim_max = {}
+            for dim, orders in dim_to_orders.items():
+                raw = 0
+                for ord_num in orders:
+                    raw += int(order_to_value.get(int(ord_num), 0))
+                # максимум берём из graph.max_score или из длины массива, умноженной на максимум значения (допущение 1)
+                max_per_dim = int(graph_cfg.get('max_score') or 6)
+                dim_raw[dim] = raw
+                dim_max[dim] = max_per_dim
+
+            # Нормализация в проценты
+            normalized_scores = {}
+            for dim, raw in dim_raw.items():
+                m = max(1, dim_max.get(dim, 6))
+                normalized_scores[dim] = min(100, max(0, int(round((raw / m) * 100))))
+
+            # Собираем карту личности для привязанности
+            personality_map = {
+                'traits': {},
+                'connections': [],
+                'overall_score': sum(normalized_scores.values()) // len(normalized_scores) if normalized_scores else 0
+            }
+            for dim, score_norm in normalized_scores.items():
+                raw = dim_raw.get(dim, 0)
+                m = dim_max.get(dim, 6)
+                personality_map['traits'][dim.capitalize()] = {
+                    'score': score_norm,
+                    'raw_score': raw,
+                    'max_score': m,
+                    'level': self.get_trait_level(score_norm),
+                    'description': self.get_trait_description(dim.capitalize(), score_norm),
+                    'recommendations': ''
+                }
+
+            # Определяем доминирующий стиль: приоритет 1) categories по номерам вопросов, 2) rules, 3) максимум по измерениям
+            dominant = None
+
+            # 1) Если определены категории с номерами вопросов — суммируем и выбираем максимум
+            try:
+                categories = scoring_cfg.get('categories') or {}
+                if isinstance(categories, dict) and categories:
+                    cat_totals = {}
+                    for cat, orders in categories.items():
+                        total = 0
+                        for ord_num in orders:
+                            total += int(order_to_value.get(int(ord_num), 0))
+                        cat_totals[cat] = total
+                    if cat_totals:
+                        dominant = max(cat_totals.items(), key=lambda x: x[1])[0]
+            except Exception:
+                pass
+
+            # 2) Если не получилось — проверяем rules (пороговые условия)
+            if dominant is None:
+                rules = scoring_cfg.get('rules', {})
+                def get_dim_val(key):
+                    return int(dim_raw.get(key, dim_raw.get(key.lower(), 0)))
+                for label, rule in rules.items():
+                    ok = True
+                    for cond_key, cond_val in rule.items():
+                        try:
+                            base, kind = cond_key.split('_')
+                        except ValueError:
+                            continue
+                        v = get_dim_val(base)
+                        if kind == 'min' and not (v >= int(cond_val)):
+                            ok = False; break
+                        if kind == 'max' and not (v <= int(cond_val)):
+                            ok = False; break
+                    if ok:
+                        dominant = label
+                        break
+
+            # 3) Если всё ещё нет — берём измерение с максимальным raw
+            if dominant is None and dim_raw:
+                dominant = max(dim_raw.items(), key=lambda x: x[1])[0]
+
+            if dominant:
+                personality_map['dominant_style'] = dominant
+
+            return personality_map, normalized_scores
+
+        # Подсчитываем баллы по чертам личности и собираем, какие вопросы относятся к какой черте
         trait_scores = {}
+        trait_questions = {}  # trait -> set(question_ids)
         for answer_data in user_answers:
             trait = answer_data['personality_trait']
             value = answer_data['value']
+            qid = answer_data['question_id']
             trait_scores[trait] = trait_scores.get(trait, 0) + value
+            s = trait_questions.get(trait)
+            if s is None:
+                s = set()
+                trait_questions[trait] = s
+            s.add(qid)
         
-        # Нормализуем баллы (0-100)
-        max_possible_score = len(user_answers) * 5  # Предполагаем максимальный балл за ответ = 5
+        # Сопоставление ВСЕХ вопросов теста к чертам (для корректного max по каждой букве/черте)
+        all_trait_questions = {}  # trait -> set(all question ids where any answer has this trait)
+        try:
+            for q in test.questions.all():
+                qid_str = str(q.id)
+                for a in q.answers.all():
+                    t = a.personality_trait
+                    if not t:
+                        continue
+                    s = all_trait_questions.get(t)
+                    if s is None:
+                        s = set()
+                        all_trait_questions[t] = s
+                    s.add(qid_str)
+        except Exception:
+            # fallback: если не удалось, используем только вопросы, где пользователь ответил
+            all_trait_questions = {k: set(v) for k, v in trait_questions.items()}
+
+        # Для букв MBTI (E/I/S/N/T/F/J/P) используем фиксированный максимум 6, если нашли ровно 6 вопросов на дихотомию
+        letters = ['E','I','S','N','T','F','J','P']
+        for letter in letters:
+            qids = all_trait_questions.get(letter, set())
+            # если тест содержит 6 вопросов для этой буквы, то max = 6 (каждый ответ score=1 в демо), иначе оставляем расчет по суммам
+            if len(qids) == 6:
+                trait_maxima_letter = 6
+                # если ранее не посчитали per_question_max_values (на случай пустых), заполним 1
+                for qid in qids:
+                    if qid not in per_question_max_values:
+                        per_question_max_values[qid] = 1
+
+        # Нормализация по максимуму КАЖДОЙ ЧЕРТЫ (сумма максимумов по всем вопросам, относящимся к этой черте во ВСЕМ тесте)
         normalized_scores = {}
-        for trait, score in trait_scores.items():
-            normalized_scores[trait] = min(100, max(0, int((score / max_possible_score) * 100)))
+        trait_maxima = {}
+        for trait, raw in trait_scores.items():
+            related_qids = all_trait_questions.get(trait, set())
+            trait_max = sum(per_question_max_values.get(qid, 0) for qid in related_qids)
+            trait_maxima[trait] = trait_max
+            if trait_max > 0:
+                normalized_scores[trait] = min(100, max(0, int(round((raw / trait_max) * 100))))
+            else:
+                normalized_scores[trait] = raw
+
+        # Принудительно фиксируем максимум = 6 для букв MBTI, если в тесте по букве ровно 6 вопросов
+        for letter in ['E','I','S','N','T','F','J','P']:
+            if letter in trait_scores:
+                qids = all_trait_questions.get(letter, set())
+                if len(qids) == 6:
+                    raw = trait_scores.get(letter, 0)
+                    trait_maxima[letter] = 6
+                    normalized_scores[letter] = min(100, max(0, int(round((raw / 6) * 100))))
         
         # Создаем карту личности
         personality_map = {
@@ -119,12 +286,51 @@ class TestSubmissionView(APIView):
             'overall_score': sum(normalized_scores.values()) // len(normalized_scores) if normalized_scores else 0
         }
         
-        # Добавляем черты личности
-        for trait, score in normalized_scores.items():
-            personality_map['traits'][trait] = {
-                'score': score,
-                'level': self.get_trait_level(score),
-                'description': self.get_trait_description(trait, score),
+        # Определяем человеко-понятные имена черт в зависимости от теста
+        test_name_l = (test.name or '').lower()
+
+        def map_trait_key(raw_key: str) -> str:
+            k = (raw_key or '').lower()
+            # Нормализуем ключи, которые могли прийти как general_trait и т.п.
+            if k in ['general_trait', 'general', 'trait']:
+                # Маппим по тесту
+                if 'pss' in test_name_l or 'stress' in test_name_l:
+                    return 'Уровень стресса'
+                if 'rosenberg' in test_name_l or 'self-esteem' in test_name_l or 'self esteem' in test_name_l:
+                    return 'Самооценка'
+                if 'satisfaction with life' in test_name_l or 'swls' in test_name_l:
+                    return 'Удовлетворённость жизнью'
+                if 'phq' in test_name_l or 'beck' in test_name_l or 'bdi' in test_name_l:
+                    return 'Уровень депрессии'
+                if 'gad' in test_name_l or 'anx' in test_name_l:
+                    return 'Уровень тревожности'
+                if 'big five' in test_name_l or 'ipip' in test_name_l or 'big 5' in test_name_l:
+                    return 'Черты Большой пятёрки'
+                return 'Итоговый показатель'
+            # Прямые известные ключи
+            if k in ['stress']:
+                return 'Уровень стресса'
+            if k in ['self_worth', 'self-esteem', 'self_esteem']:
+                return 'Самооценка'
+            if k in ['life_satisfaction', 'satisfaction']:
+                return 'Удовлетворённость жизнью'
+            if k in ['anxiety']:
+                return 'Уровень тревожности'
+            if k in ['depression']:
+                return 'Уровень депрессии'
+            return raw_key
+
+        # Добавляем черты личности с русскими и тест-специфичными именами
+        for trait, norm_score in normalized_scores.items():
+            trait_name = map_trait_key(trait)
+            raw_score = trait_scores.get(trait, 0)
+            trait_max_score = trait_maxima.get(trait, 0)
+            personality_map['traits'][trait_name] = {
+                'score': norm_score,
+                'raw_score': raw_score,
+                'max_score': trait_max_score,
+                'level': self.get_trait_level(norm_score),
+                'description': self.get_trait_description(trait_name, norm_score),
                 'recommendations': ''
             }
         
@@ -135,8 +341,8 @@ class TestSubmissionView(APIView):
                 # Создаем связь если обе черты имеют высокие баллы
                 if (normalized_scores[trait1] > 70 and normalized_scores[trait2] > 70):
                     personality_map['connections'].append({
-                        'from': trait1,
-                        'to': trait2,
+                        'from': map_trait_key(trait1),
+                        'to': map_trait_key(trait2),
                         'strength': min(normalized_scores[trait1], normalized_scores[trait2])
                     })
         
