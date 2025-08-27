@@ -34,9 +34,13 @@ const Subtitle = styled.p`
 
 const ResultsGrid = styled.div`
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
   gap: 2rem;
   margin-bottom: 3rem;
+  @media (max-width: 480px) {
+    grid-template-columns: 1fr;
+    gap: 1.25rem;
+  }
 `;
 
 const ResultCard = styled.div`
@@ -149,6 +153,12 @@ const ChartTitle = styled.h2`
 const ChartContainer = styled.div`
   height: 400px;
   margin-bottom: 2rem;
+  @media (max-width: 768px) {
+    height: 320px;
+  }
+  @media (max-width: 480px) {
+    height: 260px;
+  }
 `;
 
 const EmptyState = styled.div`

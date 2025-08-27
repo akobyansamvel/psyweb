@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import styled from 'styled-components';
 import { Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ResponsiveContainer, Tooltip } from 'recharts';
 import { DynamicProfile } from '../types';
@@ -34,6 +34,12 @@ const Title = styled.h3`
 const ChartWrapper = styled.div`
   width: 100%;
   height: 420px;
+  @media (max-width: 768px) {
+    height: 320px;
+  }
+  @media (max-width: 480px) {
+    height: 260px;
+  }
 `;
 
 const Legend = styled.div`
@@ -47,20 +53,47 @@ const Legend = styled.div`
 `;
 
 const PersonalityRadar: React.FC<PersonalityRadarProps> = ({ profile, title }) => {
-  const data = Object.entries(profile.traits).map(([name, info]) => ({
-    trait: name,
-    score: info.score,
-  }));
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [containerWidth, setContainerWidth] = useState<number>(0);
+
+  useEffect(() => {
+    if (!containerRef.current) return;
+    const el = containerRef.current;
+    const ro = new (window as any).ResizeObserver((entries: any) => {
+      for (const entry of entries) {
+        const cw = entry.contentRect?.width || el.clientWidth;
+        setContainerWidth(cw);
+      }
+    });
+    ro.observe(el);
+    // initial
+    setContainerWidth(el.clientWidth);
+    return () => ro.disconnect();
+  }, []);
+
+  const isSmall = containerWidth > 0 && containerWidth < 480;
+  const isTablet = containerWidth >= 480 && containerWidth < 768;
+  const angleTickSize = isSmall ? 10 : isTablet ? 11 : 12;
+  const radiusTickSize = isSmall ? 9 : 10;
+
+  const data = Object.entries(profile.traits).map(([name, info]) => {
+    const label = isSmall && name.length > 12 ? `${name.slice(0, 12)}…` : name;
+    return {
+      trait: label,
+      fullTrait: name,
+      score: info.score,
+    };
+  });
 
   return (
     <Container>
       <Title>{title || 'Карта личности (радар)'}</Title>
-      <ChartWrapper>
+      <ChartWrapper ref={containerRef}>
         <ResponsiveContainer width="100%" height="100%">
-          <RadarChart data={data} outerRadius={140}>
+          <RadarChart data={data} outerRadius={isSmall ? '65%' : isTablet ? '70%' : '75%'}>
             <PolarGrid stroke="rgba(255,255,255,0.15)" />
-            <PolarAngleAxis dataKey="trait" stroke="rgba(255,255,255,0.8)" tick={{ fontSize: 12 }} />
-            <PolarRadiusAxis angle={90} domain={[0, 100]} stroke="rgba(255,255,255,0.6)" tick={{ fontSize: 10 }} />
+            <PolarAngleAxis dataKey="trait" stroke="rgba(255,255,255,0.8)" tick={{ fontSize: angleTickSize }} />
+            <PolarRadiusAxis angle={90} domain={[0, 100]} stroke="rgba(255,255,255,0.6)" tick={{ fontSize: radiusTickSize }} />
             <Radar name="Баллы" dataKey="score" stroke="#6a8dff" fill="#6a8dff" fillOpacity={0.4} />
             <Tooltip
               contentStyle={{
@@ -69,8 +102,11 @@ const PersonalityRadar: React.FC<PersonalityRadarProps> = ({ profile, title }) =
                 borderRadius: 10,
                 color: 'white'
               }}
-              formatter={(value: any) => [value, 'Балл']}
-              labelFormatter={(label: string) => label}
+              formatter={(value: any, _n: any, p: any) => [value, 'Балл']}
+              labelFormatter={(_label: string, payload: any) => {
+                const item = payload && payload[0] && payload[0].payload;
+                return item?.fullTrait || _label;
+              }}
             />
           </RadarChart>
         </ResponsiveContainer>
