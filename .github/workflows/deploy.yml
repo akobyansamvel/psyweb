@@ -90,14 +90,24 @@ jobs:
       run: |
         echo "🚀 Deploying to production server..."
         
-        # Создаем архив для передачи
-        tar -czf psyweb-deploy.tar.gz \
-          --exclude='.git' \
-          --exclude='node_modules' \
-          --exclude='__pycache__' \
-          --exclude='.env' \
-          --exclude='*.pyc' \
-          .
+        # Создаем временную папку для деплоя
+        mkdir -p deploy-temp
+        
+        # Копируем только нужные файлы
+        cp -r backend deploy-temp/
+        cp -r frontend deploy-temp/
+        cp -r .github deploy-temp/
+        cp docker-compose.yml deploy-temp/ 2>/dev/null || true
+        cp nginx.conf deploy-temp/ 2>/dev/null || true
+        cp deploy.sh deploy-temp/ 2>/dev/null || true
+        cp requirements.txt deploy-temp/ 2>/dev/null || true
+        cp package.json deploy-temp/ 2>/dev/null || true
+        
+        # Создаем архив
+        tar -czf psyweb-deploy.tar.gz -C deploy-temp .
+        
+        # Очищаем временную папку
+        rm -rf deploy-temp
         
         # Передаем файлы на сервер
         scp -P $SERVER_PORT psyweb-deploy.tar.gz $SERVER_USER@$SERVER_HOST:/tmp/

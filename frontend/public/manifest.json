@@ -1,0 +1,20 @@
+{
+  "short_name": "PsyWeb",
+  "name": "PsyWeb - Психологические тесты и анализ личности",
+  "icons": [
+    {
+      "src": "brain.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "brain.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ],
+  "start_url": ".",
+  "display": "standalone",
+  "theme_color": "#000000",
+  "background_color": "#ffffff"
+}
