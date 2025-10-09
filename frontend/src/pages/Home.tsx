@@ -228,8 +228,7 @@ const Home: React.FC = () => {
       <TestGrid>
         {tests.map((test) => {
           const title = test.name_localized || localizeTestName(test.name);
-          const desc = (test.description || '').trim();
-          // Удалена неиспользуемая переменная isDup
+          // Удалена неиспользуемая переменная desc
           return (
             <Card key={test.id} to={`/test/${test.id}`}>
               <CardHeader>

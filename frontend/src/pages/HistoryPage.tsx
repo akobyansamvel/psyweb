@@ -223,6 +223,7 @@ const HistoryPage: React.FC = () => {
   useEffect(() => {
     fetchHistory();
     fetchDynamicProfile();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const fetchHistory = async (): Promise<void> => {
