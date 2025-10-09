@@ -1,4 +1,4 @@
-name: 🚀 Fast Deploy
+name: 🚀 Fast Deploy (Dropbear Compatible)
 
 on:
   push:
@@ -78,16 +78,16 @@ jobs:
         cd frontend
         npm run build
         
-    - name: 🔑 Setup SSH
+    - name: 🔑 Setup SSH (Dropbear Compatible)
       if: github.ref == 'refs/heads/main'
       run: |
         mkdir -p ~/.ssh
         
-        # Установка sshpass для парольной аутентификации (если нужна)
+        # Установка sshpass для парольной аутентификации
         sudo apt-get update
         sudo apt-get install -y sshpass
         
-        # Настройка SSH config
+        # Настройка SSH config для Dropbear
         echo "Host $SERVER_HOST" >> ~/.ssh/config
         echo "  Port $SERVER_PORT" >> ~/.ssh/config
         echo "  User $SERVER_USER" >> ~/.ssh/config
@@ -96,31 +96,26 @@ jobs:
         echo "  ServerAliveInterval 5" >> ~/.ssh/config
         echo "  ServerAliveCountMax 3" >> ~/.ssh/config
         
-        # Определяем метод аутентификации
-        if [ -n "$SSH_PRIVATE_KEY" ] && [ "$SSH_PRIVATE_KEY" != "" ]; then
-          echo "🔑 Using SSH key authentication..."
+        # Если есть приватный ключ, используем его
+        if [ -n "$SSH_PRIVATE_KEY" ]; then
           echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
           echo "  PubkeyAuthentication yes" >> ~/.ssh/config
           echo "  PasswordAuthentication no" >> ~/.ssh/config
           echo "  PreferredAuthentications publickey" >> ~/.ssh/config
-          
-          # Тест подключения с ключом
-          echo "Testing SSH connection with key..."
-          ssh -o ConnectTimeout=15 $SERVER_HOST "echo 'SSH key connection successful'"
-        elif [ -n "$SERVER_PASSWORD" ] && [ "$SERVER_PASSWORD" != "" ]; then
-          echo "🔒 Using password authentication..."
+        else
+          # Иначе используем пароль
           echo "  PubkeyAuthentication no" >> ~/.ssh/config
           echo "  PasswordAuthentication yes" >> ~/.ssh/config
           echo "  PreferredAuthentications password" >> ~/.ssh/config
-          
-          # Тест подключения с паролем
-          echo "Testing SSH connection with password..."
-          sshpass -p "$SERVER_PASSWORD" ssh -o ConnectTimeout=15 $SERVER_HOST "echo 'SSH password connection successful'"
+        fi
+        
+        # Тест подключения
+        echo "Testing SSH connection to Dropbear server..."
+        if [ -n "$SSH_PRIVATE_KEY" ]; then
+          ssh -o ConnectTimeout=15 $SERVER_HOST "echo 'SSH connection successful'"
         else
-          echo "❌ No SSH key or password provided!"
-          echo "Please set either SSH_PRIVATE_KEY or SERVER_PASSWORD in GitHub Secrets"
-          exit 1
+          sshpass -p "$SERVER_PASSWORD" ssh -o ConnectTimeout=15 $SERVER_HOST "echo 'SSH connection successful'"
         fi
         
     - name: 🚀 Deploy to production
@@ -128,20 +123,6 @@ jobs:
       run: |
         echo "🚀 Deploying to production server..."
         echo "Server: $SERVER_USER@$SERVER_HOST:$SERVER_PORT"
-        
-        # Проверяем доступность сервера
-        echo "Checking server availability..."
-        if [ -n "$SSH_PRIVATE_KEY" ] && [ "$SSH_PRIVATE_KEY" != "" ]; then
-          if ! ssh -o ConnectTimeout=15 $SERVER_HOST "echo 'Server is reachable'"; then
-            echo "❌ Server is not reachable with SSH key. Check your settings."
-            exit 1
-          fi
-        elif [ -n "$SERVER_PASSWORD" ] && [ "$SERVER_PASSWORD" != "" ]; then
-          if ! sshpass -p "$SERVER_PASSWORD" ssh -o ConnectTimeout=15 $SERVER_HOST "echo 'Server is reachable'"; then
-            echo "❌ Server is not reachable with password. Check your settings."
-            exit 1
-          fi
-        fi
         
         # Создаем временную папку для деплоя
         mkdir -p deploy-temp
@@ -164,24 +145,18 @@ jobs:
         
         # Передаем файлы на сервер
         echo "📤 Uploading files to server..."
-        if [ -n "$SSH_PRIVATE_KEY" ] && [ "$SSH_PRIVATE_KEY" != "" ]; then
-          if ! scp -o ConnectTimeout=30 psyweb-deploy.tar.gz $SERVER_HOST:/tmp/; then
-            echo "❌ Failed to upload files with SSH key. Check your SSH key and server permissions."
-            exit 1
-          fi
-        elif [ -n "$SERVER_PASSWORD" ] && [ "$SERVER_PASSWORD" != "" ]; then
-          if ! sshpass -p "$SERVER_PASSWORD" scp -o ConnectTimeout=30 psyweb-deploy.tar.gz $SERVER_HOST:/tmp/; then
-            echo "❌ Failed to upload files with password. Check your password and server permissions."
-            exit 1
-          fi
+        if [ -n "$SSH_PRIVATE_KEY" ]; then
+          scp -o ConnectTimeout=30 psyweb-deploy.tar.gz $SERVER_HOST:/tmp/
+        else
+          sshpass -p "$SERVER_PASSWORD" scp -o ConnectTimeout=30 psyweb-deploy.tar.gz $SERVER_HOST:/tmp/
         fi
         
         # Выполняем деплой на сервере
         echo "🔧 Deploying on server..."
-        if [ -n "$SSH_PRIVATE_KEY" ] && [ "$SSH_PRIVATE_KEY" != "" ]; then
-          if ! ssh -o ConnectTimeout=30 $SERVER_HOST << 'EOF'
-        elif [ -n "$SERVER_PASSWORD" ] && [ "$SERVER_PASSWORD" != "" ]; then
-          if ! sshpass -p "$SERVER_PASSWORD" ssh -o ConnectTimeout=30 $SERVER_HOST << 'EOF'
+        if [ -n "$SSH_PRIVATE_KEY" ]; then
+          ssh -o ConnectTimeout=30 $SERVER_HOST << 'EOF'
+        else
+          sshpass -p "$SERVER_PASSWORD" ssh -o ConnectTimeout=30 $SERVER_HOST << 'EOF'
         fi
           echo "Starting deployment on server..."
           cd /opt/psyweb || mkdir -p /opt/psyweb && cd /opt/psyweb
@@ -236,10 +211,6 @@ jobs:
           
           echo "✅ Deployment completed on server!"
         EOF
-        then
-          echo "❌ Deployment failed on server. Check server logs."
-          exit 1
-        fi
         
     - name: 📊 Deployment success
       if: github.ref == 'refs/heads/main'
