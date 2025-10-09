@@ -152,3 +152,20 @@ CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
     "http://127.0.0.1:3000",
 ]
+
+# Cache configuration
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+        'LOCATION': 'unique-snowflake',
+        'TIMEOUT': 300,  # 5 minutes
+        'OPTIONS': {
+            'MAX_ENTRIES': 1000,
+        }
+    }
+}
+
+# Cache timeout settings
+CACHE_TIMEOUT_SHORT = 60  # 1 minute
+CACHE_TIMEOUT_MEDIUM = 300  # 5 minutes
+CACHE_TIMEOUT_LONG = 1800  # 30 minutes

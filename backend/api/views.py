@@ -7,6 +7,8 @@ from django.contrib.auth import authenticate
 from django.shortcuts import get_object_or_404
 from django.db import transaction
 from django.db.models import Q
+from django.core.cache import cache
+from django.conf import settings
 from .models import Test, Question, Answer, TestResult, UserProfile, PsyToolkitTest, PsyToolkitImportLog
 from .psy_toolkit_service import psy_toolkit_service
 from .serializers import (
@@ -23,15 +25,28 @@ logger = logging.getLogger(__name__)
 
 class TestListView(generics.ListAPIView):
     """Список всех доступных тестов"""
-    queryset = Test.objects.filter(is_active=True)
     serializer_class = TestListSerializer
     permission_classes = [permissions.AllowAny]
     pagination_class = None
+    
+    def get_queryset(self):
+        cache_key = 'active_tests_list'
+        cached_tests = cache.get(cache_key)
+        
+        if cached_tests is None:
+            queryset = Test.objects.filter(is_active=True).prefetch_related('questions')
+            cache.set(cache_key, list(queryset), settings.CACHE_TIMEOUT_MEDIUM)
+            return queryset
+        
+        # Возвращаем кэшированные данные как QuerySet
+        return Test.objects.filter(id__in=[t.id for t in cached_tests])
 
 
 class TestDetailView(generics.RetrieveAPIView):
     """Детали конкретного теста с вопросами"""
-    queryset = Test.objects.filter(is_active=True)
+    queryset = Test.objects.filter(is_active=True).prefetch_related(
+        'questions__answers'
+    )
     serializer_class = TestSerializer
     permission_classes = [permissions.AllowAny]
 
@@ -83,29 +98,36 @@ class TestSubmissionView(APIView):
     
     def generate_personality_map(self, test, answers):
         """Генерирует карту личности на основе ответов"""
-        # Получаем все ответы пользователя и максимум по каждому вопросу
+        # Оптимизированный запрос: получаем все нужные данные одним запросом
+        answer_ids = list(answers.values())
+        answers_data = Answer.objects.filter(
+            id__in=answer_ids
+        ).select_related('question').prefetch_related('question__answers')
+        
+        # Создаем словарь для быстрого доступа
+        answers_dict = {str(a.id): a for a in answers_data}
+        
         user_answers = []
         per_question_max_values = {}  # question_id -> max value among its answers
+        
         for question_id, answer_id in answers.items():
-            try:
-                answer = Answer.objects.get(id=answer_id)
-                # вычисляем максимум для вопроса (0 если нет вариантов)
-                try:
-                    q = answer.question
-                    if q and q.answers.exists():
-                        per_question_max_values[str(q.id)] = max(a.value for a in q.answers.all())
-                except Exception:
-                    # fallback: если нет доступа к списку ответов, считаем максимум как выбранное значение
-                    per_question_max_values[str(question_id)] = max(per_question_max_values.get(str(question_id), 0), answer.value)
-
-                user_answers.append({
-                    'question_id': str(question_id),
-                    'answer_id': answer_id,
-                    'personality_trait': answer.personality_trait,
-                    'value': answer.value
-                })
-            except Answer.DoesNotExist:
+            answer = answers_dict.get(str(answer_id))
+            if not answer:
                 continue
+                
+            # Вычисляем максимум для вопроса
+            question = answer.question
+            if question and question.id not in per_question_max_values:
+                # Используем prefetch_related данные
+                max_val = max((a.value for a in question.answers.all()), default=0)
+                per_question_max_values[str(question.id)] = max_val
+
+            user_answers.append({
+                'question_id': str(question_id),
+                'answer_id': answer_id,
+                'personality_trait': answer.personality_trait,
+                'value': answer.value
+            })
         
         # Специальная логика для тестов с явной схемой подсчёта (например, стиль привязанности)
         try:
@@ -123,11 +145,12 @@ class TestSubmissionView(APIView):
             order_to_value = {}
             try:
                 for qa in user_answers:
-                    # получаем order через модель Question
-                    a_obj = Answer.objects.get(id=qa['answer_id'])
-                    q_order = getattr(a_obj.question, 'order', None)
-                    if q_order is not None:
-                        order_to_value[int(q_order)] = qa['value']
+                    # Используем уже загруженные данные
+                    answer = answers_dict.get(str(qa['answer_id']))
+                    if answer and answer.question:
+                        q_order = getattr(answer.question, 'order', None)
+                        if q_order is not None:
+                            order_to_value[int(q_order)] = qa['value']
             except Exception:
                 pass
 
@@ -231,6 +254,7 @@ class TestSubmissionView(APIView):
         # Сопоставление ВСЕХ вопросов теста к чертам (для корректного max по каждой букве/черте)
         all_trait_questions = {}  # trait -> set(all question ids where any answer has this trait)
         try:
+            # Используем уже загруженные данные из prefetch_related
             for q in test.questions.all():
                 qid_str = str(q.id)
                 for a in q.answers.all():
@@ -388,7 +412,7 @@ class TestResultView(generics.RetrieveAPIView):
     permission_classes = [permissions.IsAuthenticated]
     
     def get_queryset(self):
-        return TestResult.objects.filter(user=self.request.user)
+        return TestResult.objects.filter(user=self.request.user).select_related('test', 'user')
 
 
 class UserHistoryView(generics.ListAPIView):
@@ -397,7 +421,7 @@ class UserHistoryView(generics.ListAPIView):
     permission_classes = [permissions.IsAuthenticated]
     
     def get_queryset(self):
-        return TestResult.objects.filter(user=self.request.user).order_by('-completed_at')
+        return TestResult.objects.filter(user=self.request.user).select_related('test', 'user').order_by('-completed_at')
 
 
 class UserDynamicProfileView(APIView):

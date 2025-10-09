@@ -115,8 +115,8 @@ class UserProfile(models.Model):
         """Обновляет динамический профиль на основе всех результатов тестов"""
         from .utils import analyze_user_patterns, generate_dynamic_personality_map
         
-        # Получаем все результаты тестов пользователя
-        test_results = TestResult.objects.filter(user=self.user).order_by('completed_at')
+        # Оптимизированный запрос: получаем все результаты с связанными тестами
+        test_results = TestResult.objects.filter(user=self.user).select_related('test').order_by('completed_at')
         
         if not test_results.exists():
             self.dynamic_profile = {
