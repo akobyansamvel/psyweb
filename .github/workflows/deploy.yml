@@ -85,10 +85,21 @@ jobs:
         chmod 600 ~/.ssh/id_rsa
         ssh-keyscan -p $SERVER_PORT -H $SERVER_HOST >> ~/.ssh/known_hosts
         
+        # Проверяем подключение
+        echo "Testing SSH connection..."
+        ssh -p $SERVER_PORT -o ConnectTimeout=10 -o StrictHostKeyChecking=no $SERVER_USER@$SERVER_HOST "echo 'SSH connection successful'"
+        
     - name: 🚀 Deploy to production
       if: github.ref == 'refs/heads/main'
       run: |
         echo "🚀 Deploying to production server..."
+        echo "Server: $SERVER_USER@$SERVER_HOST:$SERVER_PORT"
+        
+        # Проверяем доступность сервера
+        if ! ssh -p $SERVER_PORT -o ConnectTimeout=10 -o StrictHostKeyChecking=no $SERVER_USER@$SERVER_HOST "echo 'Server is reachable'"; then
+          echo "❌ Server is not reachable. Check your SERVER_HOST, SERVER_PORT, and SERVER_USER settings."
+          exit 1
+        fi
         
         # Создаем временную папку для деплоя
         mkdir -p deploy-temp
@@ -110,24 +121,34 @@ jobs:
         rm -rf deploy-temp
         
         # Передаем файлы на сервер
-        scp -P $SERVER_PORT psyweb-deploy.tar.gz $SERVER_USER@$SERVER_HOST:/tmp/
+        echo "📤 Uploading files to server..."
+        if ! scp -P $SERVER_PORT -o ConnectTimeout=30 -o StrictHostKeyChecking=no psyweb-deploy.tar.gz $SERVER_USER@$SERVER_HOST:/tmp/; then
+          echo "❌ Failed to upload files. Check your SSH key and server permissions."
+          exit 1
+        fi
         
         # Выполняем деплой на сервере
-        ssh -p $SERVER_PORT $SERVER_USER@$SERVER_HOST << 'EOF'
+        echo "🔧 Deploying on server..."
+        if ! ssh -p $SERVER_PORT -o ConnectTimeout=30 -o StrictHostKeyChecking=no $SERVER_USER@$SERVER_HOST << 'EOF'
+          echo "Starting deployment on server..."
           cd /opt/psyweb || mkdir -p /opt/psyweb && cd /opt/psyweb
           
           # Останавливаем текущие процессы
+          echo "Stopping current processes..."
           pkill -f "python manage.py runserver" || true
           pkill -f "nginx" || true
           
           # Распаковываем новый код
+          echo "Extracting new code..."
           tar -xzf /tmp/psyweb-deploy.tar.gz -C .
           
           # Устанавливаем зависимости Python
+          echo "Installing Python dependencies..."
           cd backend
           pip install -r requirements.txt &
           
           # Устанавливаем зависимости Node.js
+          echo "Installing Node.js dependencies..."
           cd ../frontend
           npm ci --only=production &
           
@@ -135,19 +156,23 @@ jobs:
           wait
           
           # Собираем React приложение
+          echo "Building React app..."
           npm run build &
           
           # Применяем миграции
+          echo "Running migrations..."
           cd ../backend
           python manage.py migrate --noinput &
           
           # Собираем статические файлы
+          echo "Collecting static files..."
           python manage.py collectstatic --noinput &
           
           # Ждем завершения всех операций
           wait
           
           # Запускаем сервисы в фоновом режиме
+          echo "Starting services..."
           python manage.py runserver 0.0.0.0:8000 &
           
           # Запускаем Nginx
@@ -158,6 +183,10 @@ jobs:
           
           echo "✅ Deployment completed on server!"
         EOF
+        then
+          echo "❌ Deployment failed on server. Check server logs."
+          exit 1
+        fi
         
     - name: 📊 Deployment success
       if: github.ref == 'refs/heads/main'
