@@ -256,7 +256,7 @@ const DynamicPersonalityMap: React.FC<DynamicPersonalityMapProps> = ({ profile }
         return inconsistency ? 2.5 : 1.5;
       })
       .attr("filter", "drop-shadow(0 1px 3px rgba(0, 0, 0, 0.3))")
-      .on("mouseover", function(event, d: any) {
+      .on("mouseover", function(this: SVGCircleElement, event: MouseEvent, d: any) {
         const padding = 12;
         const ttWidth = 220; // примерно как max-width
         const ttHeight = 120; // примерная высота
@@ -277,7 +277,7 @@ const DynamicPersonalityMap: React.FC<DynamicPersonalityMapProps> = ({ profile }
           .attr("stroke-width", 3)
           .attr("r", (d: any) => Math.max(22, d.score / 3.5) + 2);
       })
-      .on("mouseout", function(event, d: any) {
+      .on("mouseout", function(this: SVGCircleElement, event: MouseEvent, d: any) {
         setTooltip(prev => ({ ...prev, visible: false }));
         const inconsistency = profile.inconsistencies.find(inc => inc.trait === d.id);
         d3.select(this)
