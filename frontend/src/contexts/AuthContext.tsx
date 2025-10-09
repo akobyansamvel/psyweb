@@ -77,6 +77,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     } else {
       setLoading(false);
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const checkAuthStatus = async (): Promise<void> => {

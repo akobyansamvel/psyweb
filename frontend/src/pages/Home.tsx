@@ -132,12 +132,7 @@ const TestTitle = styled.h3`
   color: #f3f6fb;
 `;
 
-const TestDescription = styled.p`
-  color: rgba(255, 255, 255, 0.82);
-  margin: 6px 0 16px;
-  line-height: 1.55;
-  min-height: 44px;
-`;
+// Удален неиспользуемый стиль
 
 const TestMeta = styled.div`
   display: flex;
@@ -234,10 +229,7 @@ const Home: React.FC = () => {
         {tests.map((test) => {
           const title = test.name_localized || localizeTestName(test.name);
           const desc = (test.description || '').trim();
-          const isDup = desc && (
-            desc.toLowerCase() === title.toLowerCase() ||
-            desc.toLowerCase().includes(title.toLowerCase())
-          );
+          // Удалена неиспользуемая переменная isDup
           return (
             <Card key={test.id} to={`/test/${test.id}`}>
               <CardHeader>

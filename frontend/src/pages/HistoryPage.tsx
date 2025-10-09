@@ -211,21 +211,7 @@ const ErrorMessage = styled.div`
   text-align: center;
 `;
 
-const DynamicProfileSection = styled.div`
-  background: rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 20px;
-  padding: 2rem;
-  margin-bottom: 2rem;
-`;
-
-const DynamicProfileTitle = styled.h2`
-  text-align: center;
-  margin-bottom: 2rem;
-  font-size: 1.8rem;
-  color: white;
-`;
+// Удалены неиспользуемые стили
 
 const HistoryPage: React.FC = () => {
   const { token } = useAuth();
