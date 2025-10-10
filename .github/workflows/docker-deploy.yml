@@ -68,6 +68,20 @@ jobs:
       run: |
         echo "🚀 Deploying Docker containers to 194.58.114.58..."
         
+        # Проверяем наличие необходимых переменных
+        if [ -z "${{ secrets.SERVER_HOST }}" ]; then
+          echo "❌ SERVER_HOST secret is not set!"
+          exit 1
+        fi
+        if [ -z "${{ secrets.SERVER_USER }}" ]; then
+          echo "❌ SERVER_USER secret is not set!"
+          exit 1
+        fi
+        if [ -z "${{ secrets.SSH_PRIVATE_KEY }}" ]; then
+          echo "❌ SSH_PRIVATE_KEY secret is not set!"
+          exit 1
+        fi
+        
         # Создаем файлы для деплоя
         mkdir -p deploy-temp
         
@@ -168,11 +182,13 @@ jobs:
         
         # Передаем файлы на сервер
         echo "📤 Uploading Docker deployment files..."
-        scp -o ConnectTimeout=30 psyweb-docker-deploy.tar.gz ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:/tmp/
+        echo "SERVER_USER: ${{ secrets.SERVER_USER }}"
+        echo "SERVER_HOST: ${{ secrets.SERVER_HOST }}"
+        scp -o ConnectTimeout=30 psyweb-docker-deploy.tar.gz "${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:/tmp/"
         
         # Выполняем деплой на сервере
         echo "🔧 Deploying Docker containers on server..."
-        ssh -o ConnectTimeout=30 ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} << 'EOF'
+        ssh -o ConnectTimeout=30 "${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}" << 'EOF'
           echo "Starting Docker deployment on 194.58.114.58..."
           cd /opt/psyweb || mkdir -p /opt/psyweb && cd /opt/psyweb
           
