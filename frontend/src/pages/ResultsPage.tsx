@@ -3,7 +3,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import styled from 'styled-components';
-import axios from 'axios';
+import axios from '../api/axios';
 import * as d3 from 'd3';
 import { TestResult, PersonalityMap, TraitInfo } from '../types';
 

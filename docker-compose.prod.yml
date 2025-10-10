@@ -1,0 +1,54 @@
+services:
+  backend:
+    image: ghcr.io/samvel/psyweb-backend:latest
+    container_name: psyweb-backend-prod
+    ports:
+      - "8000:8000"
+    environment:
+      - DEBUG=False
+      - DJANGO_SETTINGS_MODULE=mindjourney.settings
+      - ALLOWED_HOSTS=psytest.su,www.psytest.su
+    volumes:
+      - backend_static:/app/staticfiles
+      - backend_media:/app/media
+    networks:
+      - psyweb-network
+    restart: unless-stopped
+
+  frontend:
+    image: ghcr.io/samvel/psyweb-frontend:latest
+    container_name: psyweb-frontend-prod
+    ports:
+      - "3000:3000"
+    environment:
+      - REACT_APP_API_URL=https://psytest.su:8000/api
+    depends_on:
+      - backend
+    networks:
+      - psyweb-network
+    restart: unless-stopped
+
+  nginx:
+    image: nginx:alpine
+    container_name: psyweb-nginx-prod
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf
+      - backend_static:/var/www/static
+      - backend_media:/var/www/media
+    depends_on:
+      - backend
+      - frontend
+    networks:
+      - psyweb-network
+    restart: unless-stopped
+
+volumes:
+  backend_static:
+  backend_media:
+
+networks:
+  psyweb-network:
+    driver: bridge

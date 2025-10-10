@@ -1,0 +1,40 @@
+services:
+  backend:
+    build: 
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: psyweb-backend
+    ports:
+      - "8000:8000"
+    environment:
+      - DEBUG=True
+      - DJANGO_SETTINGS_MODULE=mindjourney.settings
+    volumes:
+      - backend_static:/app/staticfiles
+      - backend_media:/app/media
+    networks:
+      - psyweb-network
+    restart: unless-stopped
+
+  frontend:
+    build: 
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: psyweb-frontend
+    ports:
+      - "3000:3000"
+    environment:
+      - REACT_APP_API_URL=https://psytest.su:8000
+    depends_on:
+      - backend
+    networks:
+      - psyweb-network
+    restart: unless-stopped
+
+volumes:
+  backend_static:
+  backend_media:
+
+networks:
+  psyweb-network:
+    driver: bridge

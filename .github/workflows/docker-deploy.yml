@@ -1,0 +1,195 @@
+name: 🐳 Docker Deploy to psytest.su
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: 📥 Checkout code
+      uses: actions/checkout@v4
+      
+    - name: 🐳 Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+      
+    - name: 🔑 Login to Container Registry
+      uses: docker/login-action@v3
+      with:
+        registry: ${{ env.REGISTRY }}
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+        
+    - name: 🏗️ Build and push Docker images
+      uses: docker/build-push-action@v5
+      with:
+        context: .
+        platforms: linux/amd64
+        push: true
+        tags: |
+          ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-backend:latest
+          ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-frontend:latest
+        target: backend
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+        
+    - name: 🏗️ Build and push Frontend image
+      uses: docker/build-push-action@v5
+      with:
+        context: ./frontend
+        platforms: linux/amd64
+        push: true
+        tags: |
+          ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-frontend:latest
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+        
+    - name: 🔧 Setup SSH tools
+      if: github.ref == 'refs/heads/main'
+      run: |
+        echo "🔧 Installing SSH tools..."
+        sudo apt-get update
+        sudo apt-get install -y sshpass
+        
+    - name: 🚀 Deploy to production server
+      if: github.ref == 'refs/heads/main'
+      run: |
+        echo "🚀 Deploying Docker containers to psytest.su..."
+        
+        # Создаем файлы для деплоя
+        mkdir -p deploy-temp
+        
+        # Копируем Docker файлы
+        cp docker-compose.yml deploy-temp/
+        cp docker-compose.prod.yml deploy-temp/ 2>/dev/null || true
+        cp nginx.conf deploy-temp/ 2>/dev/null || true
+        cp deploy.sh deploy-temp/ 2>/dev/null || true
+        
+        # Создаем production docker-compose
+        cat > deploy-temp/docker-compose.prod.yml << 'EOF'
+        services:
+          backend:
+            image: ghcr.io/${{ github.repository }}-backend:latest
+            container_name: psyweb-backend-prod
+            ports:
+              - "8000:8000"
+            environment:
+              - DEBUG=False
+              - DJANGO_SETTINGS_MODULE=mindjourney.settings
+              - ALLOWED_HOSTS=psytest.su,www.psytest.su
+            volumes:
+              - backend_static:/app/staticfiles
+              - backend_media:/app/media
+            networks:
+              - psyweb-network
+            restart: unless-stopped
+
+          frontend:
+            image: ghcr.io/${{ github.repository }}-frontend:latest
+            container_name: psyweb-frontend-prod
+            ports:
+              - "3000:3000"
+            environment:
+              - REACT_APP_API_URL=https://psytest.su:8000/api
+            depends_on:
+              - backend
+            networks:
+              - psyweb-network
+            restart: unless-stopped
+
+          nginx:
+            image: nginx:alpine
+            container_name: psyweb-nginx-prod
+            ports:
+              - "80:80"
+              - "443:443"
+            volumes:
+              - ./nginx.conf:/etc/nginx/nginx.conf
+              - backend_static:/var/www/static
+              - backend_media:/var/www/media
+            depends_on:
+              - backend
+              - frontend
+            networks:
+              - psyweb-network
+            restart: unless-stopped
+
+        volumes:
+          backend_static:
+          backend_media:
+
+        networks:
+          psyweb-network:
+            driver: bridge
+        EOF
+        
+        # Создаем скрипт деплоя
+        cat > deploy-temp/deploy-docker.sh << 'EOF'
+        #!/bin/bash
+        echo "🐳 Starting Docker deployment on psytest.su..."
+        
+        # Останавливаем старые контейнеры
+        docker-compose -f docker-compose.prod.yml down || true
+        
+        # Удаляем старые образы
+        docker image prune -f
+        
+        # Логинимся в GitHub Container Registry
+        echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+        
+        # Запускаем новые контейнеры
+        docker-compose -f docker-compose.prod.yml up -d --pull always
+        
+        # Проверяем статус
+        docker-compose -f docker-compose.prod.yml ps
+        
+        echo "✅ Docker deployment completed!"
+        EOF
+        
+        chmod +x deploy-temp/deploy-docker.sh
+        
+        # Создаем архив
+        tar -czf psyweb-docker-deploy.tar.gz -C deploy-temp .
+        
+        # Очищаем временную папку
+        rm -rf deploy-temp
+        
+        # Передаем файлы на сервер
+        echo "📤 Uploading Docker deployment files..."
+        sshpass -p "${{ secrets.SERVER_PASSWORD }}" scp -o ConnectTimeout=30 psyweb-docker-deploy.tar.gz ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:/tmp/
+        
+        # Выполняем деплой на сервере
+        echo "🔧 Deploying Docker containers on server..."
+        sshpass -p "${{ secrets.SERVER_PASSWORD }}" ssh -o ConnectTimeout=30 ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} << 'EOF'
+          echo "Starting Docker deployment on psytest.su..."
+          cd /opt/psyweb || mkdir -p /opt/psyweb && cd /opt/psyweb
+          
+          # Распаковываем файлы деплоя
+          tar -xzf /tmp/psyweb-docker-deploy.tar.gz
+          
+          # Запускаем деплой
+          chmod +x deploy-docker.sh
+          ./deploy-docker.sh
+          
+          # Очищаем временные файлы
+          rm -f /tmp/psyweb-docker-deploy.tar.gz
+          
+          echo "✅ Docker deployment completed on psytest.su!"
+        EOF
+        
+    - name: 📊 Deployment success
+      if: github.ref == 'refs/heads/main'
+      run: |
+        echo "✅ Docker deployment completed successfully!"
+        echo "🌐 Application is live at: https://psytest.su"
+        echo "🔗 Frontend: https://psytest.su:3000"
+        echo "🔗 Backend API: https://psytest.su:8000"
+        echo "🔗 Admin: https://psytest.su:8000/admin"
