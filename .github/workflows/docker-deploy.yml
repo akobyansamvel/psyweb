@@ -66,7 +66,7 @@ jobs:
     - name: 🚀 Deploy to production server
       if: github.ref == 'refs/heads/main'
       run: |
-        echo "🚀 Deploying Docker containers to psytest.su..."
+        echo "🚀 Deploying Docker containers to 194.58.114.58..."
         
         # Создаем файлы для деплоя
         mkdir -p deploy-temp
@@ -88,7 +88,7 @@ jobs:
             environment:
               - DEBUG=False
               - DJANGO_SETTINGS_MODULE=mindjourney.settings
-              - ALLOWED_HOSTS=psytest.su,www.psytest.su
+              - ALLOWED_HOSTS=194.58.114.58
             volumes:
               - backend_static:/app/staticfiles
               - backend_media:/app/media
@@ -102,7 +102,7 @@ jobs:
             ports:
               - "3000:3000"
             environment:
-              - REACT_APP_API_URL=https://psytest.su:8000/api
+              - REACT_APP_API_URL=http://194.58.114.58:8000/api
             depends_on:
               - backend
             networks:
@@ -138,7 +138,7 @@ jobs:
         # Создаем скрипт деплоя
         cat > deploy-temp/deploy-docker.sh << 'EOF'
         #!/bin/bash
-        echo "🐳 Starting Docker deployment on psytest.su..."
+        echo "🐳 Starting Docker deployment on 194.58.114.58..."
         
         # Останавливаем старые контейнеры
         docker-compose -f docker-compose.prod.yml down || true
@@ -173,7 +173,7 @@ jobs:
         # Выполняем деплой на сервере
         echo "🔧 Deploying Docker containers on server..."
         ssh -o ConnectTimeout=30 ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} << 'EOF'
-          echo "Starting Docker deployment on psytest.su..."
+          echo "Starting Docker deployment on 194.58.114.58..."
           cd /opt/psyweb || mkdir -p /opt/psyweb && cd /opt/psyweb
           
           # Распаковываем файлы деплоя
@@ -186,14 +186,14 @@ jobs:
           # Очищаем временные файлы
           rm -f /tmp/psyweb-docker-deploy.tar.gz
           
-          echo "✅ Docker deployment completed on psytest.su!"
+          echo "✅ Docker deployment completed on 194.58.114.58!"
         EOF
         
     - name: 📊 Deployment success
       if: github.ref == 'refs/heads/main'
       run: |
         echo "✅ Docker deployment completed successfully!"
-        echo "🌐 Application is live at: https://psytest.su"
-        echo "🔗 Frontend: https://psytest.su:3000"
-        echo "🔗 Backend API: https://psytest.su:8000"
-        echo "🔗 Admin: https://psytest.su:8000/admin"
+        echo "🌐 Application is live at: http://194.58.114.58"
+        echo "🔗 Frontend: http://194.58.114.58:3000"
+        echo "🔗 Backend API: http://194.58.114.58:8000"
+        echo "🔗 Admin: http://194.58.114.58:8000/admin"

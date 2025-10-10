@@ -7,7 +7,7 @@ services:
     environment:
       - DEBUG=False
       - DJANGO_SETTINGS_MODULE=mindjourney.settings
-      - ALLOWED_HOSTS=psytest.su,www.psytest.su
+      - ALLOWED_HOSTS=194.58.114.58
     volumes:
       - backend_static:/app/staticfiles
       - backend_media:/app/media
@@ -21,7 +21,7 @@ services:
     ports:
       - "3000:3000"
     environment:
-      - REACT_APP_API_URL=https://psytest.su:8000/api
+      - REACT_APP_API_URL=http://194.58.114.58:8000/api
     depends_on:
       - backend
     networks:

@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 // API Configuration
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://psytest.su:8000/api';
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://194.58.114.58:8000/api';
 
 // Configure axios defaults
 axios.defaults.baseURL = API_BASE_URL;

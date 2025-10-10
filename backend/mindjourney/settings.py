@@ -11,7 +11,7 @@ SECRET_KEY = 'django-insecure-mindjourney-secret-key-change-in-production'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['localhost', '127.0.0.1', '0.0.0.0', 'psytest.su', 'www.psytest.su']
+ALLOWED_HOSTS = ['localhost', '127.0.0.1', '0.0.0.0', '194.58.114.58']
 
 # Application definition
 INSTALLED_APPS = [
@@ -151,10 +151,8 @@ CORS_ALLOW_CREDENTIALS = False
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
     "http://127.0.0.1:3000",
-    "https://psytest.su",
-    "https://www.psytest.su",
-    "http://psytest.su",
-    "http://www.psytest.su",
+    "http://194.58.114.58:3000",
+    "http://194.58.114.58",
 ]
 
 # Cache configuration
