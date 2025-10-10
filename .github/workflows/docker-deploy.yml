@@ -8,7 +8,7 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}
+  IMAGE_NAME: ${{ github.repository_owner }}/psyweb
 
 jobs:
   build-and-deploy:
@@ -75,7 +75,7 @@ jobs:
         cat > deploy-temp/docker-compose.prod.yml << 'EOF'
         services:
           backend:
-            image: ghcr.io/${{ github.repository }}-backend:latest
+            image: ghcr.io/${{ github.repository_owner }}/psyweb-backend:latest
             container_name: psyweb-backend-prod
             ports:
               - "8000:8000"
@@ -91,7 +91,7 @@ jobs:
             restart: unless-stopped
 
           frontend:
-            image: ghcr.io/${{ github.repository }}-frontend:latest
+            image: ghcr.io/${{ github.repository_owner }}/psyweb-frontend:latest
             container_name: psyweb-frontend-prod
             ports:
               - "3000:3000"
