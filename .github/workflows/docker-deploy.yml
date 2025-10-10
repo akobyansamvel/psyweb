@@ -54,12 +54,14 @@ jobs:
         cache-from: type=gha
         cache-to: type=gha,mode=max
         
-    - name: 🔧 Setup SSH tools
+    - name: 🔧 Setup SSH
       if: github.ref == 'refs/heads/main'
       run: |
-        echo "🔧 Installing SSH tools..."
-        sudo apt-get update
-        sudo apt-get install -y sshpass
+        echo "🔧 Setting up SSH..."
+        mkdir -p ~/.ssh
+        echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+        chmod 600 ~/.ssh/id_rsa
+        ssh-keyscan -H ${{ secrets.SERVER_HOST }} >> ~/.ssh/known_hosts
         
     - name: 🚀 Deploy to production server
       if: github.ref == 'refs/heads/main'
@@ -166,11 +168,11 @@ jobs:
         
         # Передаем файлы на сервер
         echo "📤 Uploading Docker deployment files..."
-        sshpass -p "${{ secrets.SERVER_PASSWORD }}" scp -o ConnectTimeout=30 psyweb-docker-deploy.tar.gz ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:/tmp/
+        scp -o ConnectTimeout=30 psyweb-docker-deploy.tar.gz ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:/tmp/
         
         # Выполняем деплой на сервере
         echo "🔧 Deploying Docker containers on server..."
-        sshpass -p "${{ secrets.SERVER_PASSWORD }}" ssh -o ConnectTimeout=30 ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} << 'EOF'
+        ssh -o ConnectTimeout=30 ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} << 'EOF'
           echo "Starting Docker deployment on psytest.su..."
           cd /opt/psyweb || mkdir -p /opt/psyweb && cd /opt/psyweb
           
