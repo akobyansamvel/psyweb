@@ -1,6 +1,6 @@
 services:
   backend:
-    image: ghcr.io/samvel/psyweb-backend:latest
+    image: ghcr.io/akobyansamvel/psyweb-backend:latest
     container_name: psyweb-backend-prod
     ports:
       - "8000:8000"
@@ -16,7 +16,7 @@ services:
     restart: unless-stopped
 
   frontend:
-    image: ghcr.io/samvel/psyweb-frontend:latest
+    image: ghcr.io/akobyansamvel/psyweb-frontend:latest
     container_name: psyweb-frontend-prod
     ports:
       - "3000:3000"

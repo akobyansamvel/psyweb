@@ -28,16 +28,14 @@ jobs:
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}
         
-    - name: 🏗️ Build and push Docker images
+    - name: 🏗️ Build and push Backend image
       uses: docker/build-push-action@v5
       with:
-        context: .
+        context: ./backend
         platforms: linux/amd64
         push: true
         tags: |
           ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-backend:latest
-          ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-frontend:latest
-        target: backend
         cache-from: type=gha
         cache-to: type=gha,mode=max
         
