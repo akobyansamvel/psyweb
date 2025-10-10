@@ -61,7 +61,21 @@ jobs:
         mkdir -p ~/.ssh
         echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
         chmod 600 ~/.ssh/id_rsa
+        
+        # Проверяем доступность сервера
+        echo "🔍 Testing server connectivity..."
+        ping -c 3 ${{ secrets.SERVER_HOST }} || echo "⚠️ Ping failed, but continuing..."
+        
+        # Проверяем SSH порт
+        echo "🔍 Testing SSH port 22..."
+        nc -zv ${{ secrets.SERVER_HOST }} 22 || echo "⚠️ SSH port 22 not accessible"
+        
+        # Добавляем ключ хоста
         ssh-keyscan -H ${{ secrets.SERVER_HOST }} >> ~/.ssh/known_hosts
+        
+        # Тестируем SSH соединение
+        echo "🔍 Testing SSH connection..."
+        ssh -o ConnectTimeout=10 -o StrictHostKeyChecking=no ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} "echo 'SSH connection successful'" || echo "⚠️ SSH test failed"
         
     - name: 🚀 Deploy to production server
       if: github.ref == 'refs/heads/main'
@@ -184,11 +198,16 @@ jobs:
         echo "📤 Uploading Docker deployment files..."
         echo "SERVER_USER: ${{ secrets.SERVER_USER }}"
         echo "SERVER_HOST: ${{ secrets.SERVER_HOST }}"
-        scp -o ConnectTimeout=30 psyweb-docker-deploy.tar.gz "${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:/tmp/"
+        
+        # Пробуем scp, если не работает - пробуем rsync
+        if ! scp -o ConnectTimeout=60 -o ServerAliveInterval=10 -o ServerAliveCountMax=3 psyweb-docker-deploy.tar.gz "${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:/tmp/"; then
+          echo "⚠️ SCP failed, trying rsync..."
+          rsync -avz -e "ssh -o ConnectTimeout=60 -o ServerAliveInterval=10 -o ServerAliveCountMax=3" psyweb-docker-deploy.tar.gz "${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:/tmp/"
+        fi
         
         # Выполняем деплой на сервере
         echo "🔧 Deploying Docker containers on server..."
-        ssh -o ConnectTimeout=30 "${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}" << 'EOF'
+        ssh -o ConnectTimeout=60 -o ServerAliveInterval=10 -o ServerAliveCountMax=3 "${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}" << 'EOF'
           echo "Starting Docker deployment on 194.58.114.58..."
           cd /opt/psyweb || mkdir -p /opt/psyweb && cd /opt/psyweb
           
