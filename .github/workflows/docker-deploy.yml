@@ -72,6 +72,8 @@ jobs:
             --exclude='.coverage' \
             --exclude='*.egg-info' \
             --exclude='.env*' \
+            --exclude='psyweb-deploy.tar.gz' \
+            --warning=no-file-changed \
             .
           
           echo "📤 Uploading archive..."
