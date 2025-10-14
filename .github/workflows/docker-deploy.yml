@@ -1,239 +1,149 @@
-name: 🐳 Docker Deploy to psytest.su
+name: Deploy PsyWeb
 
 on:
   push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
+    branches: [main]
+  workflow_dispatch:
 
 permissions:
   contents: read
-  packages: write
 
 env:
-  REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository_owner }}/psyweb
+  SERVER_PORT: ${{ secrets.SERVER_PORT }}
+  SERVER_USER: ${{ secrets.SERVER_USER }}
+  SERVER_HOST: ${{ secrets.SERVER_HOST }}
 
 jobs:
-  build-and-deploy:
+  configure-ssh:
     runs-on: ubuntu-latest
-    
     steps:
-    - name: 📥 Checkout code
-      uses: actions/checkout@v4
-      
-    - name: 🐳 Set up Docker Buildx
-      uses: docker/setup-buildx-action@v3
-      
-    - name: 🔑 Login to Container Registry
-      uses: docker/login-action@v3
-      with:
-        registry: ${{ env.REGISTRY }}
-        username: ${{ github.actor }}
-        password: ${{ secrets.GITHUB_TOKEN }}
-        
-    - name: 🏗️ Build and push Backend image
-      uses: docker/build-push-action@v5
-      with:
-        context: ./backend
-        platforms: linux/amd64
-        push: true
-        tags: |
-          ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-backend:latest
-        cache-from: type=gha
-        cache-to: type=gha,mode=max
-        
-    - name: 🏗️ Build and push Frontend image
-      uses: docker/build-push-action@v5
-      with:
-        context: ./frontend
-        platforms: linux/amd64
-        push: true
-        tags: |
-          ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-frontend:latest
-        cache-from: type=gha
-        cache-to: type=gha,mode=max
-        
-    - name: 🔧 Setup SSH
-      if: github.ref == 'refs/heads/main'
-      run: |
-        echo "🔧 Setting up SSH..."
-        mkdir -p ~/.ssh
-        echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
-        chmod 600 ~/.ssh/id_rsa
-        
-        # Проверяем доступность сервера
-        echo "🔍 Testing server connectivity..."
-        ping -c 3 ${{ secrets.SERVER_HOST }} || echo "⚠️ Ping failed, but continuing..."
-        
-        # Проверяем SSH порт
-        echo "🔍 Testing SSH port 22..."
-        nc -zv ${{ secrets.SERVER_HOST }} 22 || echo "⚠️ SSH port 22 not accessible"
-        
-        # Добавляем ключ хоста с принудительным IPv4
-        echo "🔍 Adding host key..."
-        ssh-keyscan -H -4 ${{ secrets.SERVER_HOST }} >> ~/.ssh/known_hosts
-        
-        # Проверяем содержимое known_hosts
-        echo "🔍 Known hosts:"
-        cat ~/.ssh/known_hosts | grep ${{ secrets.SERVER_HOST }} || echo "No host key found"
-        
-        # Тестируем SSH соединение с дополнительными опциями
-        echo "🔍 Testing SSH connection..."
-        ssh -o ConnectTimeout=10 -o StrictHostKeyChecking=no -o AddressFamily=inet -o UserKnownHostsFile=~/.ssh/known_hosts -o GlobalKnownHostsFile=/dev/null ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} "echo 'SSH connection successful'" || echo "⚠️ SSH test failed"
-        
-    - name: 🚀 Deploy to production server
-      if: github.ref == 'refs/heads/main'
-      run: |
-        echo "🚀 Deploying Docker containers to 194.58.114.58..."
-        
-        # Проверяем наличие необходимых переменных
-        if [ -z "${{ secrets.SERVER_HOST }}" ]; then
-          echo "❌ SERVER_HOST secret is not set!"
-          exit 1
-        fi
-        if [ -z "${{ secrets.SERVER_USER }}" ]; then
-          echo "❌ SERVER_USER secret is not set!"
-          exit 1
-        fi
-        if [ -z "${{ secrets.SSH_PRIVATE_KEY }}" ]; then
-          echo "❌ SSH_PRIVATE_KEY secret is not set!"
-          exit 1
-        fi
-        
-        # Создаем файлы для деплоя
-        mkdir -p deploy-temp
-        
-        # Копируем Docker файлы
-        cp docker-compose.yml deploy-temp/
-        cp docker-compose.prod.yml deploy-temp/ 2>/dev/null || true
-        cp nginx.conf deploy-temp/ 2>/dev/null || true
-        cp deploy.sh deploy-temp/ 2>/dev/null || true
-        
-        # Создаем production docker-compose
-        cat > deploy-temp/docker-compose.prod.yml << 'EOF'
-        services:
-          backend:
-            image: ghcr.io/${{ github.repository_owner }}/psyweb-backend:latest
-            container_name: psyweb-backend-prod
-            ports:
-              - "8000:8000"
-            environment:
-              - DEBUG=False
-              - DJANGO_SETTINGS_MODULE=mindjourney.settings
-              - ALLOWED_HOSTS=194.58.114.58
-            volumes:
-              - backend_static:/app/staticfiles
-              - backend_media:/app/media
-            networks:
-              - psyweb-network
-            restart: unless-stopped
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
 
-          frontend:
-            image: ghcr.io/${{ github.repository_owner }}/psyweb-frontend:latest
-            container_name: psyweb-frontend-prod
-            ports:
-              - "3000:3000"
-            environment:
-              - REACT_APP_API_URL=http://194.58.114.58:8000/api
-            depends_on:
-              - backend
-            networks:
-              - psyweb-network
-            restart: unless-stopped
+      - name: Configure SSH
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -T 10 -p "${SERVER_PORT}" -H "${SERVER_HOST}" >> ~/.ssh/known_hosts
 
-          nginx:
-            image: nginx:alpine
-            container_name: psyweb-nginx-prod
-            ports:
-              - "80:80"
-              - "443:443"
-            volumes:
-              - ./nginx.conf:/etc/nginx/nginx.conf
-              - backend_static:/var/www/static
-              - backend_media:/var/www/media
-            depends_on:
-              - backend
-              - frontend
-            networks:
-              - psyweb-network
-            restart: unless-stopped
+  upload-sources:
+    runs-on: ubuntu-latest
+    needs: configure-ssh
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
 
-        volumes:
-          backend_static:
-          backend_media:
+      - name: Configure SSH
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -T 10 -p "${SERVER_PORT}" -H "${SERVER_HOST}" >> ~/.ssh/known_hosts
 
-        networks:
-          psyweb-network:
-            driver: bridge
-        EOF
-        
-        # Создаем скрипт деплоя
-        cat > deploy-temp/deploy-docker.sh << 'EOF'
-        #!/bin/bash
-        echo "🐳 Starting Docker deployment on 194.58.114.58..."
-        
-        # Останавливаем старые контейнеры
-        docker-compose -f docker-compose.prod.yml down || true
-        
-        # Удаляем старые образы
-        docker image prune -f
-        
-        # Логинимся в GitHub Container Registry
-        echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
-        
-        # Запускаем новые контейнеры
-        docker-compose -f docker-compose.prod.yml up -d --pull always
-        
-        # Проверяем статус
-        docker-compose -f docker-compose.prod.yml ps
-        
-        echo "✅ Docker deployment completed!"
-        EOF
-        
-        chmod +x deploy-temp/deploy-docker.sh
-        
-        # Создаем архив
-        tar -czf psyweb-docker-deploy.tar.gz -C deploy-temp .
-        
-        # Очищаем временную папку
-        rm -rf deploy-temp
-        
-        # Передаем файлы на сервер
-        echo "📤 Uploading Docker deployment files..."
-        echo "SERVER_USER: ${{ secrets.SERVER_USER }}"
-        echo "SERVER_HOST: ${{ secrets.SERVER_HOST }}"
-        
-        # Пробуем scp, если не работает - пробуем rsync
-        if ! scp -o ConnectTimeout=60 -o ServerAliveInterval=10 -o ServerAliveCountMax=3 -o AddressFamily=inet -o UserKnownHostsFile=~/.ssh/known_hosts -o GlobalKnownHostsFile=/dev/null psyweb-docker-deploy.tar.gz "${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:/tmp/"; then
-          echo "⚠️ SCP failed, trying rsync..."
-          rsync -avz -e "ssh -o ConnectTimeout=60 -o ServerAliveInterval=10 -o ServerAliveCountMax=3 -o AddressFamily=inet -o UserKnownHostsFile=~/.ssh/known_hosts -o GlobalKnownHostsFile=/dev/null" psyweb-docker-deploy.tar.gz "${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:/tmp/"
-        fi
-        
-        # Выполняем деплой на сервере
-        echo "🔧 Deploying Docker containers on server..."
-        ssh -o ConnectTimeout=60 -o ServerAliveInterval=10 -o ServerAliveCountMax=3 -o AddressFamily=inet -o UserKnownHostsFile=~/.ssh/known_hosts -o GlobalKnownHostsFile=/dev/null "${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}" << 'EOF'
-          echo "Starting Docker deployment on 194.58.114.58..."
-          cd /opt/psyweb || mkdir -p /opt/psyweb && cd /opt/psyweb
-          
-          # Распаковываем файлы деплоя
-          tar -xzf /tmp/psyweb-docker-deploy.tar.gz
-          
-          # Запускаем деплой
-          chmod +x deploy-docker.sh
-          ./deploy-docker.sh
-          
-          # Очищаем временные файлы
-          rm -f /tmp/psyweb-docker-deploy.tar.gz
-          
-          echo "✅ Docker deployment completed on 194.58.114.58!"
-        EOF
-        
-    - name: 📊 Deployment success
-      if: github.ref == 'refs/heads/main'
-      run: |
-        echo "✅ Docker deployment completed successfully!"
-        echo "🌐 Application is live at: http://194.58.114.58"
-        echo "🔗 Frontend: http://194.58.114.58:3000"
-        echo "🔗 Backend API: http://194.58.114.58:8000"
-        echo "🔗 Admin: http://194.58.114.58:8000/admin"
+      - name: Upload sources (rsync)
+        shell: bash
+        run: |
+          set -euo pipefail
+          RSYNC_EXCLUDES=(
+            ".git/"
+            ".github/"
+            "frontend/node_modules/"
+            "frontend/build/"
+            "frontend/.next/"
+            "backend/staticfiles/"
+            "backend/media/"
+            "*.log"
+            "*.tmp"
+          )
+          RSYNC_ARGS=()
+          for e in "${RSYNC_EXCLUDES[@]}"; do RSYNC_ARGS+=(--exclude "$e"); done
+          rsync -az --delete -e "ssh -p ${SERVER_PORT}" "${RSYNC_ARGS[@]}" ./ "${SERVER_USER}@${SERVER_HOST}:/home/psyweb/"
+
+  build-images:
+    runs-on: ubuntu-latest
+    needs: upload-sources
+    steps:
+      - name: Configure SSH
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -T 10 -p "${SERVER_PORT}" -H "${SERVER_HOST}" >> ~/.ssh/known_hosts
+
+      - name: Build images on server
+        shell: bash
+        run: |
+          set -euo pipefail
+          ssh -p "${SERVER_PORT}" "${SERVER_USER}@${SERVER_HOST}" "
+            cd /home/psyweb;
+            docker compose -f docker-compose.yml build
+          "
+
+  up-containers:
+    runs-on: ubuntu-latest
+    needs: build-images
+    steps:
+      - name: Configure SSH
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -T 10 -p "${SERVER_PORT}" -H "${SERVER_HOST}" >> ~/.ssh/known_hosts
+
+      - name: Up containers on server
+        shell: bash
+        run: |
+          set -euo pipefail
+          ssh -p "${SERVER_PORT}" "${SERVER_USER}@${SERVER_HOST}" "
+            cd /home/psyweb;
+            docker compose -f docker-compose.yml down || true;
+            docker compose -f docker-compose.yml up -d
+          "
+
+  restart_nginx:
+    runs-on: ubuntu-latest
+    needs: up-containers
+    steps:
+      - name: Configure SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -p ${{ secrets.SERVER_PORT }} ${{ secrets.SERVER_HOST }} >> ~/.ssh/known_hosts
+
+      - name: Restart Nginx on server
+        run: |
+          ssh -p ${{ secrets.SERVER_PORT }} ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} "sudo service nginx restart || docker restart psyweb-nginx-prod || true"
+        env:
+          SERVER_PORT: ${{ secrets.SERVER_PORT }}
+          SERVER_USER: ${{ secrets.SERVER_USER }}
+          SERVER_HOST: ${{ secrets.SERVER_HOST }}
+
+  deployment-success:
+    runs-on: ubuntu-latest
+    needs: restart_nginx
+    steps:
+      - name: Deployment completed
+        run: |
+          echo "✅ Docker deployment completed successfully!"
+          echo "🌐 Application is live at: http://${{ secrets.SERVER_HOST }}"
+          echo "🔗 Frontend: http://${{ secrets.SERVER_HOST }}:3000"
+          echo "🔗 Backend API: http://${{ secrets.SERVER_HOST }}:8000"
+          echo "🔗 Admin: http://${{ secrets.SERVER_HOST }}:8000/admin"
