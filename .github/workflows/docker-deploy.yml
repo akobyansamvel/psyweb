@@ -74,6 +74,7 @@ jobs:
             --exclude='.env*' \
             --exclude='psyweb-deploy.tar.gz' \
             --warning=no-file-changed \
+            --ignore-failed-read \
             .
           
           echo "📤 Uploading archive..."
