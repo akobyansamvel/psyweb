@@ -46,7 +46,7 @@ jobs:
         
     - name: 🏗️ Build and push Frontend image
       uses: docker/build-push-action@v5
-        with:
+      with:
         context: ./frontend
         platforms: linux/amd64
         push: true
@@ -58,9 +58,9 @@ jobs:
         
     - name: 🔧 Setup SSH
       if: github.ref == 'refs/heads/main'
-        run: |
+      run: |
         echo "🔧 Setting up SSH..."
-          mkdir -p ~/.ssh
+        mkdir -p ~/.ssh
           echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
         
@@ -103,7 +103,7 @@ jobs:
         
     - name: 🚀 Deploy to production server
       if: github.ref == 'refs/heads/main'
-        run: |
+      run: |
         echo "🚀 Deploying Docker containers to ${{ secrets.SERVER_HOST }}..."
         
         # Проверяем наличие необходимых переменных
@@ -271,9 +271,9 @@ jobs:
         
     - name: 📊 Deployment success
       if: github.ref == 'refs/heads/main'
-        run: |
+      run: |
         echo "✅ Docker deployment completed successfully!"
-          echo "🌐 Application is live at: http://${{ secrets.SERVER_HOST }}"
-          echo "🔗 Frontend: http://${{ secrets.SERVER_HOST }}:3000"
-          echo "🔗 Backend API: http://${{ secrets.SERVER_HOST }}:8000"
-          echo "🔗 Admin: http://${{ secrets.SERVER_HOST }}:8000/admin"
+        echo "🌐 Application is live at: http://${{ secrets.SERVER_HOST }}"
+        echo "🔗 Frontend: http://${{ secrets.SERVER_HOST }}:3000"
+        echo "🔗 Backend API: http://${{ secrets.SERVER_HOST }}:8000"
+        echo "🔗 Admin: http://${{ secrets.SERVER_HOST }}:8000/admin"
