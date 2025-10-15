@@ -20,7 +20,7 @@ jobs:
     
     steps:
     - name: 📥 Checkout code
-      uses: actions/checkout@v4
+        uses: actions/checkout@v4
       
     - name: 🐳 Set up Docker Buildx
       uses: docker/setup-buildx-action@v3
@@ -46,7 +46,7 @@ jobs:
         
     - name: 🏗️ Build and push Frontend image
       uses: docker/build-push-action@v5
-      with:
+        with:
         context: ./frontend
         platforms: linux/amd64
         push: true
@@ -58,11 +58,28 @@ jobs:
         
     - name: 🔧 Setup SSH
       if: github.ref == 'refs/heads/main'
-      run: |
+        run: |
         echo "🔧 Setting up SSH..."
-        mkdir -p ~/.ssh
-        echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
-        chmod 600 ~/.ssh/id_rsa
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+        
+        # Создаем SSH config файл для лучшей совместимости
+        cat > ~/.ssh/config << 'EOF'
+        Host *
+            StrictHostKeyChecking no
+            UserKnownHostsFile /dev/null
+            GlobalKnownHostsFile /dev/null
+            ConnectTimeout 30
+            ServerAliveInterval 10
+            ServerAliveCountMax 3
+            TCPKeepAlive yes
+            AddressFamily inet
+            PreferredAuthentications publickey
+            PubkeyAuthentication yes
+            PasswordAuthentication no
+            BatchMode yes
+        EOF
         
         # Проверяем доступность сервера
         echo "🔍 Testing server connectivity..."
@@ -74,19 +91,19 @@ jobs:
         
         # Добавляем ключ хоста с принудительным IPv4
         echo "🔍 Adding host key..."
-        ssh-keyscan -H -4 ${{ secrets.SERVER_HOST }} >> ~/.ssh/known_hosts
+        ssh-keyscan -H -4 -p 22 ${{ secrets.SERVER_HOST }} >> ~/.ssh/known_hosts 2>/dev/null || echo "⚠️ Could not add host key"
         
         # Проверяем содержимое known_hosts
         echo "🔍 Known hosts:"
         cat ~/.ssh/known_hosts | grep ${{ secrets.SERVER_HOST }} || echo "No host key found"
         
-        # Тестируем SSH соединение с дополнительными опциями
-        echo "🔍 Testing SSH connection..."
-        ssh -o ConnectTimeout=10 -o StrictHostKeyChecking=no -o AddressFamily=inet -o UserKnownHostsFile=~/.ssh/known_hosts -o GlobalKnownHostsFile=/dev/null ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} "echo 'SSH connection successful'" || echo "⚠️ SSH test failed"
+        # Тестируем SSH соединение с улучшенными параметрами
+        echo "🔍 Testing SSH connection with verbose output..."
+        ssh -vvv -o ConnectTimeout=30 -o ServerAliveInterval=10 -o ServerAliveCountMax=3 -o TCPKeepAlive=yes -o AddressFamily=inet -o PreferredAuthentications=publickey -o PubkeyAuthentication=yes -o PasswordAuthentication=no -o BatchMode=yes ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} "echo 'SSH connection successful'" || echo "⚠️ SSH test failed, but continuing with deployment"
         
     - name: 🚀 Deploy to production server
       if: github.ref == 'refs/heads/main'
-      run: |
+        run: |
         echo "🚀 Deploying Docker containers to ${{ secrets.SERVER_HOST }}..."
         
         # Проверяем наличие необходимых переменных
@@ -224,15 +241,16 @@ jobs:
         echo "SERVER_USER: ${{ secrets.SERVER_USER }}"
         echo "SERVER_HOST: ${{ secrets.SERVER_HOST }}"
         
-        # Пробуем scp, если не работает - пробуем rsync
-        if ! scp -o ConnectTimeout=60 -o ServerAliveInterval=10 -o ServerAliveCountMax=3 -o AddressFamily=inet -o UserKnownHostsFile=~/.ssh/known_hosts -o GlobalKnownHostsFile=/dev/null psyweb-docker-deploy.tar.gz "${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:/tmp/"; then
+        # Пробуем scp с улучшенными параметрами
+        echo "📤 Uploading deployment files via SCP..."
+        if ! scp -o ConnectTimeout=60 -o ServerAliveInterval=10 -o ServerAliveCountMax=3 -o TCPKeepAlive=yes -o AddressFamily=inet -o PreferredAuthentications=publickey -o PubkeyAuthentication=yes -o PasswordAuthentication=no -o BatchMode=yes psyweb-docker-deploy.tar.gz "${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:/tmp/"; then
           echo "⚠️ SCP failed, trying rsync..."
-          rsync -avz -e "ssh -o ConnectTimeout=60 -o ServerAliveInterval=10 -o ServerAliveCountMax=3 -o AddressFamily=inet -o UserKnownHostsFile=~/.ssh/known_hosts -o GlobalKnownHostsFile=/dev/null" psyweb-docker-deploy.tar.gz "${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:/tmp/"
+          rsync -avz -e "ssh -o ConnectTimeout=60 -o ServerAliveInterval=10 -o ServerAliveCountMax=3 -o TCPKeepAlive=yes -o AddressFamily=inet -o PreferredAuthentications=publickey -o PubkeyAuthentication=yes -o PasswordAuthentication=no -o BatchMode=yes" psyweb-docker-deploy.tar.gz "${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:/tmp/"
         fi
         
         # Выполняем деплой на сервере
         echo "🔧 Deploying Docker containers on server..."
-        ssh -o ConnectTimeout=60 -o ServerAliveInterval=10 -o ServerAliveCountMax=3 -o AddressFamily=inet -o UserKnownHostsFile=~/.ssh/known_hosts -o GlobalKnownHostsFile=/dev/null "${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}" << 'EOF'
+        ssh -o ConnectTimeout=60 -o ServerAliveInterval=10 -o ServerAliveCountMax=3 -o TCPKeepAlive=yes -o AddressFamily=inet -o PreferredAuthentications=publickey -o PubkeyAuthentication=yes -o PasswordAuthentication=no -o BatchMode=yes "${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}" << 'EOF'
           echo "Starting Docker deployment on ${{ secrets.SERVER_HOST }}..."
           cd /opt/psyweb || mkdir -p /opt/psyweb && cd /opt/psyweb
           
@@ -253,9 +271,9 @@ jobs:
         
     - name: 📊 Deployment success
       if: github.ref == 'refs/heads/main'
-      run: |
+        run: |
         echo "✅ Docker deployment completed successfully!"
-        echo "🌐 Application is live at: http://${{ secrets.SERVER_HOST }}"
-        echo "🔗 Frontend: http://${{ secrets.SERVER_HOST }}:3000"
-        echo "🔗 Backend API: http://${{ secrets.SERVER_HOST }}:8000"
-        echo "🔗 Admin: http://${{ secrets.SERVER_HOST }}:8000/admin"
+          echo "🌐 Application is live at: http://${{ secrets.SERVER_HOST }}"
+          echo "🔗 Frontend: http://${{ secrets.SERVER_HOST }}:3000"
+          echo "🔗 Backend API: http://${{ secrets.SERVER_HOST }}:8000"
+          echo "🔗 Admin: http://${{ secrets.SERVER_HOST }}:8000/admin"
