@@ -21,7 +21,7 @@ docker-compose up --build
 docker-compose up -d --build
 ```
 
-### 3. Остановка сервисов
+### 3. Остановка сервисовee
 
 ```bash
 docker-compose down
