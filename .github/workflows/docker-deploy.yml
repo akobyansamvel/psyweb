@@ -14,7 +14,7 @@ env:
   SERVER_HOST: ${{ secrets.SERVER_HOST }}
 
 jobs:
-  configure-ssh:
+  deploy:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -25,36 +25,15 @@ jobs:
       - name: Configure SSH
         shell: bash
         run: |
-          set -euo pipefail
           mkdir -p ~/.ssh
           chmod 700 ~/.ssh
           echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
-          ssh-keyscan -T 10 -p "${SERVER_PORT}" -H "${SERVER_HOST}" >> ~/.ssh/known_hosts
+          ssh-keyscan -p "${SERVER_PORT}" "${SERVER_HOST}" >> ~/.ssh/known_hosts
 
-  upload-sources:
-    runs-on: ubuntu-latest
-    needs: configure-ssh
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 1
-
-      - name: Configure SSH
+      - name: Upload and Deploy
         shell: bash
         run: |
-          set -euo pipefail
-          mkdir -p ~/.ssh
-          chmod 700 ~/.ssh
-          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
-          chmod 600 ~/.ssh/id_rsa
-          ssh-keyscan -T 10 -p "${SERVER_PORT}" -H "${SERVER_HOST}" >> ~/.ssh/known_hosts
-
-      - name: Upload sources (tar + scp)
-        shell: bash
-        run: |
-          set -euo pipefail
           echo "📦 Creating archive..."
           tar -czf psyweb-deploy.tar.gz \
             --exclude='.git' \
@@ -73,140 +52,42 @@ jobs:
             --exclude='*.egg-info' \
             --exclude='.env*' \
             --exclude='psyweb-deploy.tar.gz' \
-            --warning=no-file-changed \
-            --ignore-failed-read \
             .
           
-          echo "📤 Uploading archive..."
-          # Пробуем scp, если не работает - пробуем rsync
-          if ! scp -o ConnectTimeout=120 \
-              -o ServerAliveInterval=5 \
-              -o ServerAliveCountMax=6 \
-              -o StrictHostKeyChecking=no \
-              -o UserKnownHostsFile=~/.ssh/known_hosts \
-              -o GlobalKnownHostsFile=/dev/null \
-              -o TCPKeepAlive=yes \
-              -o Compression=no \
-              -P "${SERVER_PORT}" \
-              psyweb-deploy.tar.gz \
-              "${SERVER_USER}@${SERVER_HOST}:/tmp/"; then
-            echo "⚠️ SCP failed, trying rsync..."
-            rsync -avz -e "ssh -o ConnectTimeout=120 -o ServerAliveInterval=5 -o ServerAliveCountMax=6 -o StrictHostKeyChecking=no -o UserKnownHostsFile=~/.ssh/known_hosts -o GlobalKnownHostsFile=/dev/null -o TCPKeepAlive=yes -o Compression=no -p ${SERVER_PORT}" psyweb-deploy.tar.gz "${SERVER_USER}@${SERVER_HOST}:/tmp/"
-          fi
+          echo "📤 Uploading to server..."
+          scp -o StrictHostKeyChecking=no -P "${SERVER_PORT}" psyweb-deploy.tar.gz "${SERVER_USER}@${SERVER_HOST}:/tmp/"
           
-          echo "📂 Extracting on server..."
-          ssh -o ConnectTimeout=120 \
-              -o ServerAliveInterval=5 \
-              -o ServerAliveCountMax=6 \
-              -o StrictHostKeyChecking=no \
-              -o UserKnownHostsFile=~/.ssh/known_hosts \
-              -o GlobalKnownHostsFile=/dev/null \
-              -o TCPKeepAlive=yes \
-              -o Compression=no \
-              -p "${SERVER_PORT}" \
-              "${SERVER_USER}@${SERVER_HOST}" "
-            cd /home/psyweb || mkdir -p /home/psyweb && cd /home/psyweb;
-            tar -xzf /tmp/psyweb-deploy.tar.gz;
-            rm -f /tmp/psyweb-deploy.tar.gz;
-            echo '✅ Files extracted successfully!'
-          "
-          
-          echo "✅ Upload completed!"
-
-  build-images:
-    runs-on: ubuntu-latest
-    needs: upload-sources
-    steps:
-      - name: Configure SSH
-        shell: bash
-        run: |
-          set -euo pipefail
-          mkdir -p ~/.ssh
-          chmod 700 ~/.ssh
-          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
-          chmod 600 ~/.ssh/id_rsa
-          ssh-keyscan -T 10 -p "${SERVER_PORT}" -H "${SERVER_HOST}" >> ~/.ssh/known_hosts
-
-      - name: Build images on server
-        shell: bash
-        run: |
-          set -euo pipefail
-          ssh -o ConnectTimeout=60 \
-              -o ServerAliveInterval=10 \
-              -o ServerAliveCountMax=3 \
-              -o StrictHostKeyChecking=no \
-              -o UserKnownHostsFile=~/.ssh/known_hosts \
-              -o GlobalKnownHostsFile=/dev/null \
-              -p "${SERVER_PORT}" \
-              "${SERVER_USER}@${SERVER_HOST}" "
-            cd /home/psyweb;
-            docker compose -f docker-compose.yml build
-          "
-
-  up-containers:
-    runs-on: ubuntu-latest
-    needs: build-images
-    steps:
-      - name: Configure SSH
-        shell: bash
-        run: |
-          set -euo pipefail
-          mkdir -p ~/.ssh
-          chmod 700 ~/.ssh
-          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
-          chmod 600 ~/.ssh/id_rsa
-          ssh-keyscan -T 10 -p "${SERVER_PORT}" -H "${SERVER_HOST}" >> ~/.ssh/known_hosts
-
-      - name: Up containers on server
-        shell: bash
-        run: |
-          set -euo pipefail
-          ssh -o ConnectTimeout=60 \
-              -o ServerAliveInterval=10 \
-              -o ServerAliveCountMax=3 \
-              -o StrictHostKeyChecking=no \
-              -o UserKnownHostsFile=~/.ssh/known_hosts \
-              -o GlobalKnownHostsFile=/dev/null \
-              -p "${SERVER_PORT}" \
-              "${SERVER_USER}@${SERVER_HOST}" "
-            cd /home/psyweb;
-            docker compose -f docker-compose.yml down || true;
+          echo "🚀 Deploying on server..."
+          ssh -o StrictHostKeyChecking=no -p "${SERVER_PORT}" "${SERVER_USER}@${SERVER_HOST}" "
+            cd /home/psyweb || mkdir -p /home/psyweb && cd /home/psyweb
+            echo '📂 Extracting files...'
+            tar -xzf /tmp/psyweb-deploy.tar.gz
+            rm -f /tmp/psyweb-deploy.tar.gz
+            echo '📋 Files extracted:'
+            ls -la
+            echo '🛑 Stopping old containers...'
+            docker compose -f docker-compose.yml down || true
+            echo '🧹 Cleaning up old images...'
+            docker system prune -f || true
+            echo '🔨 Building backend image...'
+            docker compose -f docker-compose.yml build backend --no-cache
+            echo '🔨 Building frontend image...'
+            docker compose -f docker-compose.yml build frontend --no-cache
+            echo '🚀 Starting all containers...'
             docker compose -f docker-compose.yml up -d
+            echo '📊 Container status:'
+            docker compose -f docker-compose.yml ps
+            echo '✅ Deployment completed!'
           "
 
-  restart_nginx:
-    runs-on: ubuntu-latest
-    needs: up-containers
-    steps:
-      - name: Configure SSH
+      - name: Restart Nginx
+        shell: bash
         run: |
-          mkdir -p ~/.ssh
-          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
-          chmod 600 ~/.ssh/id_rsa
-          ssh-keyscan -p ${{ secrets.SERVER_PORT }} ${{ secrets.SERVER_HOST }} >> ~/.ssh/known_hosts
+          ssh -o StrictHostKeyChecking=no -p "${SERVER_PORT}" "${SERVER_USER}@${SERVER_HOST}" "sudo service nginx restart || true"
 
-      - name: Restart Nginx on server
+      - name: Deployment Success
         run: |
-          ssh -o ConnectTimeout=60 \
-              -o ServerAliveInterval=10 \
-              -o ServerAliveCountMax=3 \
-              -o StrictHostKeyChecking=no \
-              -o UserKnownHostsFile=~/.ssh/known_hosts \
-              -o GlobalKnownHostsFile=/dev/null \
-              -p ${{ secrets.SERVER_PORT }} \
-              ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} "sudo service nginx restart || docker restart psyweb-nginx-prod || true"
-        env:
-          SERVER_PORT: ${{ secrets.SERVER_PORT }}
-          SERVER_USER: ${{ secrets.SERVER_USER }}
-          SERVER_HOST: ${{ secrets.SERVER_HOST }}
-
-  deployment-success:
-    runs-on: ubuntu-latest
-    needs: restart_nginx
-    steps:
-      - name: Deployment completed
-        run: |
-          echo "✅ Docker deployment completed successfully!"
+          echo "✅ Deployment completed successfully!"
           echo "🌐 Application is live at: http://${{ secrets.SERVER_HOST }}"
           echo "🔗 Frontend: http://${{ secrets.SERVER_HOST }}:3000"
           echo "🔗 Backend API: http://${{ secrets.SERVER_HOST }}:8000"
