@@ -78,24 +78,31 @@ jobs:
             .
           
           echo "📤 Uploading archive..."
-          # Добавляем более надежные настройки SSH
-          scp -o ConnectTimeout=60 \
-              -o ServerAliveInterval=10 \
-              -o ServerAliveCountMax=3 \
+          # Пробуем scp, если не работает - пробуем rsync
+          if ! scp -o ConnectTimeout=120 \
+              -o ServerAliveInterval=5 \
+              -o ServerAliveCountMax=6 \
               -o StrictHostKeyChecking=no \
               -o UserKnownHostsFile=~/.ssh/known_hosts \
               -o GlobalKnownHostsFile=/dev/null \
+              -o TCPKeepAlive=yes \
+              -o Compression=no \
               -P "${SERVER_PORT}" \
               psyweb-deploy.tar.gz \
-              "${SERVER_USER}@${SERVER_HOST}:/tmp/"
+              "${SERVER_USER}@${SERVER_HOST}:/tmp/"; then
+            echo "⚠️ SCP failed, trying rsync..."
+            rsync -avz -e "ssh -o ConnectTimeout=120 -o ServerAliveInterval=5 -o ServerAliveCountMax=6 -o StrictHostKeyChecking=no -o UserKnownHostsFile=~/.ssh/known_hosts -o GlobalKnownHostsFile=/dev/null -o TCPKeepAlive=yes -o Compression=no -p ${SERVER_PORT}" psyweb-deploy.tar.gz "${SERVER_USER}@${SERVER_HOST}:/tmp/"
+          fi
           
           echo "📂 Extracting on server..."
-          ssh -o ConnectTimeout=60 \
-              -o ServerAliveInterval=10 \
-              -o ServerAliveCountMax=3 \
+          ssh -o ConnectTimeout=120 \
+              -o ServerAliveInterval=5 \
+              -o ServerAliveCountMax=6 \
               -o StrictHostKeyChecking=no \
               -o UserKnownHostsFile=~/.ssh/known_hosts \
               -o GlobalKnownHostsFile=/dev/null \
+              -o TCPKeepAlive=yes \
+              -o Compression=no \
               -p "${SERVER_PORT}" \
               "${SERVER_USER}@${SERVER_HOST}" "
             cd /home/psyweb || mkdir -p /home/psyweb && cd /home/psyweb;
