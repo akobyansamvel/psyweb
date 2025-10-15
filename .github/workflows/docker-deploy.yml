@@ -78,10 +78,26 @@ jobs:
             .
           
           echo "📤 Uploading archive..."
-          scp -P "${SERVER_PORT}" psyweb-deploy.tar.gz "${SERVER_USER}@${SERVER_HOST}:/tmp/"
+          # Добавляем более надежные настройки SSH
+          scp -o ConnectTimeout=60 \
+              -o ServerAliveInterval=10 \
+              -o ServerAliveCountMax=3 \
+              -o StrictHostKeyChecking=no \
+              -o UserKnownHostsFile=~/.ssh/known_hosts \
+              -o GlobalKnownHostsFile=/dev/null \
+              -P "${SERVER_PORT}" \
+              psyweb-deploy.tar.gz \
+              "${SERVER_USER}@${SERVER_HOST}:/tmp/"
           
           echo "📂 Extracting on server..."
-          ssh -p "${SERVER_PORT}" "${SERVER_USER}@${SERVER_HOST}" "
+          ssh -o ConnectTimeout=60 \
+              -o ServerAliveInterval=10 \
+              -o ServerAliveCountMax=3 \
+              -o StrictHostKeyChecking=no \
+              -o UserKnownHostsFile=~/.ssh/known_hosts \
+              -o GlobalKnownHostsFile=/dev/null \
+              -p "${SERVER_PORT}" \
+              "${SERVER_USER}@${SERVER_HOST}" "
             cd /home/psyweb || mkdir -p /home/psyweb && cd /home/psyweb;
             tar -xzf /tmp/psyweb-deploy.tar.gz;
             rm -f /tmp/psyweb-deploy.tar.gz;
@@ -108,7 +124,14 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          ssh -p "${SERVER_PORT}" "${SERVER_USER}@${SERVER_HOST}" "
+          ssh -o ConnectTimeout=60 \
+              -o ServerAliveInterval=10 \
+              -o ServerAliveCountMax=3 \
+              -o StrictHostKeyChecking=no \
+              -o UserKnownHostsFile=~/.ssh/known_hosts \
+              -o GlobalKnownHostsFile=/dev/null \
+              -p "${SERVER_PORT}" \
+              "${SERVER_USER}@${SERVER_HOST}" "
             cd /home/psyweb;
             docker compose -f docker-compose.yml build
           "
@@ -131,7 +154,14 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          ssh -p "${SERVER_PORT}" "${SERVER_USER}@${SERVER_HOST}" "
+          ssh -o ConnectTimeout=60 \
+              -o ServerAliveInterval=10 \
+              -o ServerAliveCountMax=3 \
+              -o StrictHostKeyChecking=no \
+              -o UserKnownHostsFile=~/.ssh/known_hosts \
+              -o GlobalKnownHostsFile=/dev/null \
+              -p "${SERVER_PORT}" \
+              "${SERVER_USER}@${SERVER_HOST}" "
             cd /home/psyweb;
             docker compose -f docker-compose.yml down || true;
             docker compose -f docker-compose.yml up -d
@@ -150,7 +180,14 @@ jobs:
 
       - name: Restart Nginx on server
         run: |
-          ssh -p ${{ secrets.SERVER_PORT }} ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} "sudo service nginx restart || docker restart psyweb-nginx-prod || true"
+          ssh -o ConnectTimeout=60 \
+              -o ServerAliveInterval=10 \
+              -o ServerAliveCountMax=3 \
+              -o StrictHostKeyChecking=no \
+              -o UserKnownHostsFile=~/.ssh/known_hosts \
+              -o GlobalKnownHostsFile=/dev/null \
+              -p ${{ secrets.SERVER_PORT }} \
+              ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} "sudo service nginx restart || docker restart psyweb-nginx-prod || true"
         env:
           SERVER_PORT: ${{ secrets.SERVER_PORT }}
           SERVER_USER: ${{ secrets.SERVER_USER }}
